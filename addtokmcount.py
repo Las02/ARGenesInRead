@@ -1,4 +1,4 @@
-def count(list,dict1):
+def Count(list,dict1):
     for Kmer in KmerList:
         if Kmer in KmCount:
             KmCount[Kmer] += 1
