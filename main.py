@@ -30,7 +30,7 @@ def CountKmerPerAR(nKmer_per_AR, DataStructure):
     '''Counts the amount of all kmers for each AntibioticResistence Gene in the dict: nKmer_per_AR'''
 
     # Goes trough each kmer
-    for (kmer,data) in DataStructure.items():
+    for data in DataStructure.values():
 
         # Go through each AR_gene for which the kmer was found and add the count to it
         for AR_gene in data["AR_genes"]:
@@ -47,7 +47,10 @@ nKmer_per_AR = dict()
 ## Reading in the Antibiotic Resistence (AR) File 
 
 AR_file = open('resistance_genes.fsa.txt', 'r')
-#AR_file = open('ARsmall.txt', 'r')#
+filename = "Unknown3_raw_reads_1.txt.gz"
+
+#AR_file = open('ARsmall.txt', 'r')
+#filename = "smallfastaseq.txt.gz"
 
 line = 'void'
 while line != '' and line[0] != '>':
@@ -91,8 +94,7 @@ while line != '':
 
 ## Reading in the sequenceing file
 
-#filename = "smallfastaseq.txt.gz"
-filename = "Unknown3_raw_reads_1.txt.gz"
+
 sample_file = gzip.open(filename, "r")
 
 last_line = ""
@@ -111,7 +113,6 @@ for line in sample_file:
         
     last_line = line
     
-print(nKmer_per_AR)
 
 CountKmerPerAR(nKmer_per_AR, DataStructure)
 
