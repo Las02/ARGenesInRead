@@ -50,7 +50,6 @@ def CountKmerPerAR(nKmer_per_AR, Data_Structure):
             
             else:
                 nKmer_per_AR[AR_gene] = data["count"]
-                print("HEEEE")
 
 
 def AddToDatastructure(Data_Structure, kmer_list, header):
