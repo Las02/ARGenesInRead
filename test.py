@@ -1,3 +1,8 @@
+"""
+real    1m57.778s
+user    1m51.063s
+sys     0m2.063s
+"""
 
 from findkmer import FindKmer
 
