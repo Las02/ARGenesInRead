@@ -9,7 +9,7 @@ sample_file = gzip.open(filename, "r")
 in_dna = False
 for line in sample_file:
     line = line.decode("utf-8")
-    
+
     if in_dna:
         dna = line.strip()
         CompareDNA(dna)
@@ -17,5 +17,5 @@ for line in sample_file:
 
     if line.startswith("@"):
         in_dna = True
-    
+
     
