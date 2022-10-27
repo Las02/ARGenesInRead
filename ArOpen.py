@@ -7,13 +7,13 @@ from findkmer import FindKmer
 
 def Count(list,KmCount,header,ARCount):
     for Kmer in list:
-        ARCount[header] = []
+        ARCount = {header}
+        ARCount[header] += [Kmer]
+
         if Kmer in KmCount:
             KmCount[Kmer] += 1
         else:
             KmCount[Kmer] = 1
-        ARCount[header] += Kmer
-
 
 
 KmerList = list()
