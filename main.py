@@ -28,18 +28,18 @@ def CountEachKmer(kmer_list, Data_Structure, nKmer_per_AR):
     for kmer in kmer_list:
         # If the kmer is equal to an AR gene
         if kmer in Data_Structure:
-            data = Data_Structure[kmer]
+            AR_to_range = Data_Structure[kmer]
     
             # Go through each AR_gene for which the kmer was found and add the count to it
-            for AR_gene in data["AR_genes"]:
+            for AR_gene in AR_to_range:
                 
                 if AR_gene in nKmer_per_AR:
-                    from_to_len = data["AR_genes"][AR_gene]
+                    from_to_len = AR_to_range[AR_gene]
                     AddDepth(from_to_len, nKmer_per_AR, AR_gene)
                 
                 else:
                     # Extract [from, to, len(dna)]
-                    from_to_len = data["AR_genes"][AR_gene]
+                    from_to_len = AR_to_range[AR_gene]
                     # Make vector of [0] to represent depht of each nt
                     length_of_gene = from_to_len[2]
                     nKmer_per_AR[AR_gene] = [0] * length_of_gene
@@ -66,10 +66,10 @@ def AddToDatastructure(Data_Structure, kmer_list, header, range_list):
 
         # If the kmer is allready assigned to an AR gene, add the additional
         if kmer in Data_Structure:
-            Data_Structure[kmer]["AR_genes"][header] = (kmer_range)
+            Data_Structure[kmer][header] = (kmer_range)
         # Else add the kmer to the datastructure
         else:
-            Data_Structure[kmer] = {"AR_genes":{header:kmer_range}}
+            Data_Structure[kmer] = {header:kmer_range}
                 
 
 # Set the kmer lenght to look for
