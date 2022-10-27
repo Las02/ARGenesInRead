@@ -5,17 +5,35 @@ import re
 
 from findkmer import FindKmer
 
+
+
+
+def FinalCounter(finalcount, ARCount, KmCount):
+    for AR in ARCount.items():
+        kmerlist = AR[1]
+        count = 0
+        for kmer in kmerlist:
+            count += KmCount[kmer]
+        
+        finalcount[AR[0]] = count
+
+
+    
 def Count(list,KmCount,header,ARCount):
     for Kmer in list:
+
+        # Den her skal over ift til den anden fil
         ARCount[header] = []
         if Kmer in KmCount:
             KmCount[Kmer] += 1
         else:
             KmCount[Kmer] = 1
-        ARCount[header] += Kmer
+        
+        # Men ikke den her del som skal blive
+    ARCount[header] = list
 
 
-
+finalcount = dict()
 KmerList = list()
 KmCount = dict()
 ARCount = dict()
@@ -41,4 +59,6 @@ while line != '':
     KmerList = FindKmer(dna,19)
     Count(KmerList,KmCount,header,ARCount)
 
-print(ARCount)
+#print(ARCount)
+FinalCounter(finalcount, ARCount, KmCount)
+print(finalcount)
