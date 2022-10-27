@@ -21,4 +21,4 @@ while line != '':
             sys.exit(1)
         dna += line
         line = ResistanceGenes.readline()
-        print(dna)
+    print(dna)
