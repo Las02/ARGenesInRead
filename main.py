@@ -1,12 +1,3 @@
-
-"""
-real    1m52.000s
-user    1m46.734s
-sys     0m2.438s
-Vi skal checke begge strands
-Tror vi skal checke at entire gene er covered
-"""
-
 import sys
 import re
 import gzip
@@ -18,9 +9,7 @@ def FindKmer(dna, kmer_len):
     if kmer_len > len(dna):
         return
 
-    # This list is used to save all the found kmers
     kmer_list = []
-    # This list is used to save the range for which it was found
     range_list = []
     from_range = 0
     to_range = len(dna) - kmer_len + 1   #+1 to also add last kmer
@@ -28,58 +17,44 @@ def FindKmer(dna, kmer_len):
 
         kmer = dna[i: i + kmer_len]
         kmer_list.append(kmer)
-        range_list.append([i, i + kmer_len, len(dna)])
+        range_list.append([i, len(dna)])
 
     return kmer_list,range_list
 
-def CountEachKmer(kmer_list, Data_Structure):
+def CountEachKmer(kmer_list, Data_Structure, nKmer_per_AR):
     '''Counts the amount of each kmer in the dict: kmer_count'''
+
+    # Goes through each found kmer
     for kmer in kmer_list:
+        # If the kmer is equal to an AR gene
         if kmer in Data_Structure:
-            Data_Structure[kmer]["count"] += 1
-
-def CountKmerPerAR(nKmer_per_AR, Data_Structure):
-    '''Counts the amount of all kmers for each AntibioticResistence Gene in the dict: nKmer_per_AR'''
-
-    # Goes trough each kmer
-    for data in Data_Structure.values():
-
-        # Go through each AR_gene for which the kmer was found and add the count to it
-        for AR_gene in data["AR_genes"]:
-            
-            if data["count"] == 0:
-                pass
-
-            elif AR_gene in nKmer_per_AR:
-                from_to_len = data["AR_genes"][AR_gene]
-                AddDepth(from_to_len, data, nKmer_per_AR, AR_gene)
-            
-            else:
-                # Extract the range from which the kmer was taken [from, to, len(dna)] 
-                from_to_len = data["AR_genes"][AR_gene]
-                # Make vector of [0] to represent depht of each nt. The length is equal to the AR gene
-                length_of_gene = from_to_len[2]
-                nKmer_per_AR[AR_gene] = [0] * length_of_gene
-
-                # Add the count for the kmer to the specific place
-                AddDepth(from_to_len, data, nKmer_per_AR, AR_gene)
+            AR_to_range = Data_Structure[kmer]
+    
+            # Go through each AR_gene for which the kmer was found and add the count to it
+            for AR_gene in AR_to_range:
                 
+                if AR_gene in nKmer_per_AR:
+                    from_to_len = AR_to_range[AR_gene]
+                    AddDepth(from_to_len, nKmer_per_AR, AR_gene)
                 
-def AddDepth(from_to_len, data, nKmer_per_AR, AR_gene):
-    """Add the found depht to each nt position"""
+                else:
+                    # Extract [from, to, len(dna)]
+                    from_to_len = AR_to_range[AR_gene]
+                    # Make vector of [0] to represent depht of each nt
+                    length_of_gene = from_to_len[1]
+                    nKmer_per_AR[AR_gene] = [0] * length_of_gene
 
-    # The ranges are from the gene where the Kmer was taken
+                    # Add the count for the kmer to the specific place
+                    AddDepth(from_to_len, nKmer_per_AR, AR_gene)
+            
+
+def AddDepth(from_to_len, nKmer_per_AR, AR_gene):
+    """Add the count for the kmer to the specific place"""
     from_range = from_to_len[0]
-    to_range = from_to_len[1]
-
-    # The amount of times the kmer was found
-    add = data["count"]
-
-    # Add the depht to the allready found depht
+    to_range = from_range + kmer_length
+    add = 1
     for i in range(from_range, to_range):
-        nKmer_per_AR[AR_gene][i] += data["count"]
-
-
+        nKmer_per_AR[AR_gene][i] += 1
 
 
 def AddToDatastructure(Data_Structure, kmer_list, header, range_list):
@@ -90,16 +65,16 @@ def AddToDatastructure(Data_Structure, kmer_list, header, range_list):
 
         # If the kmer is allready assigned to an AR gene, add the additional
         if kmer in Data_Structure:
-            Data_Structure[kmer]["AR_genes"][header] = (kmer_range)
+            Data_Structure[kmer][header] = (kmer_range)
         # Else add the kmer to the datastructure
         else:
-            Data_Structure[kmer] = {"count":0, "AR_genes":{header:kmer_range}}
+            Data_Structure[kmer] = {header:kmer_range}
                 
 
 # Set the kmer lenght to look for
 kmer_length = 5
-# Stores {Kmer: {"count":0,{"AR": header:(positions)}}}, The Kmer as key, and then both the number of time it is seen, 
-#and the AR genes which has the kmer. Lastly it also stores the positions from which the kmer was taken and the length of the dna
+# Stores {Kmer: {{"AR":}}}, The Kmer as key, and then another dict with AR gene as key 
+#and the startrange for the kmer position in the AR gene, and the length of the AR gene
 Data_Structure = dict()
 Could_be_kmers = dict()
 nKmer_per_AR = dict()
@@ -107,10 +82,10 @@ nKmer_per_AR = dict()
 
 ## Reading in the Antibiotic Resistence (AR) File 
 
-AR_file = open('resistance_genes.fsa.txt', 'r')
-filename = "Unknown3_raw_reads_1.txt.gz"
-#AR_file = open('ARsmall.txt', 'r')
-#filename = "smallfastaseq.txt.gz"
+#AR_file = open('resistance_genes.fsa.txt', 'r')
+#filename = "Unknown3_raw_reads_1.txt.gz"
+AR_file = open('ARsmall.txt', 'r')
+filename = "smallfastaseq.txt.gz"
 
 line = 'void'
 while line != '' and line[0] != '>':
@@ -157,18 +132,26 @@ for line in sample_file:
         # Find all posible kmers
         (kmer_list, range_list) = FindKmer(dna, kmer_length)
         # Count the foind posible kmers
-        CountEachKmer(kmer_list, Data_Structure)
+        CountEachKmer(kmer_list, Data_Structure, nKmer_per_AR)
         
     last_line = line
     
-
-CountKmerPerAR(nKmer_per_AR, Data_Structure)
-
-for i in nKmer_per_AR.values():
-    # This calculates the counts for each AR gene
-    count = sum(i)/kmer_length
-    print(count)
+# Quick print the found values
+# And the depht of each pp
+for item in nKmer_per_AR.items():
+    count = sum(item[1])/kmer_length
+    print("*"*50)
+    print("AR genename:", item[0], end="\t")
+    print("kmers matching:", count)
+    print("The depht of each position:")
+    print(item[1])
+    print("kmers of size:", kmer_length)
+    print("*"*50)
 #Count found to be: 129.0, 118.0
+
+
+
+
 
 AR_file.close()
 sample_file.close()
