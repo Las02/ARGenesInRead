@@ -72,7 +72,7 @@ def AddToDatastructure(Data_Structure, kmer_list, header, range_list):
                 
 
 # Set the kmer lenght to look for
-kmer_length = 5
+kmer_length = 19
 # Stores {Kmer: {{"AR":}}}, The Kmer as key, and then another dict with AR gene as key 
 #and the startrange for the kmer position in the AR gene, and the length of the AR gene
 Data_Structure = dict()
@@ -82,10 +82,10 @@ nKmer_per_AR = dict()
 
 ## Reading in the Antibiotic Resistence (AR) File 
 
-#AR_file = open('resistance_genes.fsa.txt', 'r')
-#filename = "Unknown3_raw_reads_1.txt.gz"
-AR_file = open('ARsmall.txt', 'r')
-filename = "smallfastaseq.txt.gz"
+AR_file = open('resistance_genes.fsa.txt', 'r')
+filename = "Unknown3_raw_reads_1.txt.gz"
+#AR_file = open('ARsmall.txt', 'r')
+#filename = "smallfastaseq.txt.gz"
 
 line = 'void'
 while line != '' and line[0] != '>':
@@ -136,6 +136,8 @@ for line in sample_file:
         
     last_line = line
     
+
+
 # Quick print the found values
 # And the depht of each pp
 for item in nKmer_per_AR.items():
@@ -143,12 +145,17 @@ for item in nKmer_per_AR.items():
     print("*"*50)
     print("AR genename:", item[0], end="\t")
     print("kmers matching:", count)
-    print("The depht of each position:")
-    print(item[1])
-    print("kmers of size:", kmer_length)
+    #print("The depht of each position:")
+    #print(item[1])
     print("*"*50)
+print("kmers of size:", kmer_length)
 #Count found to be: 129.0, 118.0
 
+"""
+real    2m18.392s
+user    2m15.391s
+sys     0m2.047s
+"""
 
 
 
