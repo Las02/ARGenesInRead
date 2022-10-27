@@ -3,7 +3,8 @@
 real    1m52.000s
 user    1m46.734s
 sys     0m2.438s
-
+Vi skal checke begge strands
+Tror vi skal checke at entire gene er covered
 """
 
 import sys
