@@ -18,7 +18,9 @@ def FindKmer(dna, kmer_len):
     if kmer_len > len(dna):
         return
 
+    # This list is used to save all the found kmers
     kmer_list = []
+    # This list is used to save the range for which it was found
     range_list = []
     from_range = 0
     to_range = len(dna) - kmer_len + 1   #+1 to also add last kmer
@@ -53,9 +55,9 @@ def CountKmerPerAR(nKmer_per_AR, Data_Structure):
                 AddDepth(from_to_len, data, nKmer_per_AR, AR_gene)
             
             else:
-                # Extract [from, to, len(dna)]
+                # Extract the range from which the kmer was taken [from, to, len(dna)] 
                 from_to_len = data["AR_genes"][AR_gene]
-                # Make vector of [0] to represent depht of each nt
+                # Make vector of [0] to represent depht of each nt. The length is equal to the AR gene
                 length_of_gene = from_to_len[2]
                 nKmer_per_AR[AR_gene] = [0] * length_of_gene
 
@@ -64,12 +66,18 @@ def CountKmerPerAR(nKmer_per_AR, Data_Structure):
                 
                 
 def AddDepth(from_to_len, data, nKmer_per_AR, AR_gene):
+    """Add the found depht to each nt position"""
+
+    # The ranges are from the gene where the Kmer was taken
     from_range = from_to_len[0]
     to_range = from_to_len[1]
+
+    # The amount of times the kmer was found
     add = data["count"]
+
+    # Add the depht to the allready found depht
     for i in range(from_range, to_range):
         nKmer_per_AR[AR_gene][i] += data["count"]
-
 
 
 
@@ -90,7 +98,8 @@ def AddToDatastructure(Data_Structure, kmer_list, header, range_list):
 
 # Set the kmer lenght to look for
 kmer_length = 5
-# Stores {Kmer: {"count":0,{"AR":}}}, The Kmer as key, and then both the number of time it is seen, and the AR genes which has the kmer
+# Stores {Kmer: {"count":0,{"AR": header:(positions)}}}, The Kmer as key, and then both the number of time it is seen, 
+#and the AR genes which has the kmer. Lastly it also stores the positions from which the kmer was taken and the length of the dna
 Data_Structure = dict()
 Could_be_kmers = dict()
 nKmer_per_AR = dict()
@@ -98,10 +107,10 @@ nKmer_per_AR = dict()
 
 ## Reading in the Antibiotic Resistence (AR) File 
 
-#AR_file = open('resistance_genes.fsa.txt', 'r')
-#filename = "Unknown3_raw_reads_1.txt.gz"
-AR_file = open('ARsmall.txt', 'r')
-filename = "smallfastaseq.txt.gz"
+AR_file = open('resistance_genes.fsa.txt', 'r')
+filename = "Unknown3_raw_reads_1.txt.gz"
+#AR_file = open('ARsmall.txt', 'r')
+#filename = "smallfastaseq.txt.gz"
 
 line = 'void'
 while line != '' and line[0] != '>':
@@ -156,6 +165,7 @@ for line in sample_file:
 CountKmerPerAR(nKmer_per_AR, Data_Structure)
 
 for i in nKmer_per_AR.values():
+    # This calculates the counts for each AR gene
     count = sum(i)/kmer_length
     print(count)
 #Count found to be: 129.0, 118.0
