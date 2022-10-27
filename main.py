@@ -1,7 +1,3 @@
-# XXX Det virker nu men...
-# XXX Lige nu kan CountEachKmer blive ekstremt stor hvis input FASTAq er stor
-# XXX Vi burde kun adde til den hvis vi har Kmeren i vores dict
-# XXX {Kmer: [count,{AR}]} <= evt. :(
 
 import sys
 import re
@@ -24,38 +20,34 @@ def FindKmer(dna, kmer_len):
 
     return kmer_list
 
-def CountEachKmer(kmer_list, AR_to_kmers):
+def CountEachKmer(kmer_list, DataStructure):
     '''Counts the amount of each kmer in the dict: kmer_count'''
     for kmer in kmer_list:
-        if kmer in AR_to_kmers:
-            AR_to_kmers[kmer]["count"] += 1
+        if kmer in DataStructure:
+            DataStructure[kmer]["count"] += 1
 
-def CountKmerPerAR(nKmer_per_AR, AR_to_kmers, kmer_count):
+def CountKmerPerAR(nKmer_per_AR, DataStructure):
     '''Counts the amount of all kmers for each AntibioticResistence Gene in the dict: nKmer_per_AR'''
-    for AR_gene in AR_to_kmers.items():
-        kmerlist = AR_gene[1]
-        count = 0
-        for kmer in kmerlist:
-            
-            # If the kmer has been found (meaning its in kmer_count)
-            # then add the amount of times it has been found to the total count for the AR_gene
-            if kmer in kmer_count:
-               count += kmer_count[kmer]
 
-        AR_genename = AR_gene[0]
-        nKmer_per_AR[AR_genename] = count
+    # Goes trough each kmer
+    for (kmer,data) in DataStructure.items():
 
+        # Go through each AR_gene for which the kmer was found and add the count to it
+        for AR_gene in data["AR_genes"]:
+            nKmer_per_AR[AR_gene] += data["count"]
+                
 
 # Set the kmer lenght to look for
 kmer_length = 5
 # Store which Antibiotic Resistence (AR) gene has which kmers
-AR_to_kmers = dict()
+DataStructure = dict()
 Could_be_kmers = dict()
+nKmer_per_AR = dict()
 
 ## Reading in the Antibiotic Resistence (AR) File 
 
-#AR_file = open('resistance_genes.fsa.txt', 'r')
-AR_file = open('ARsmall.txt', 'r')#
+AR_file = open('resistance_genes.fsa.txt', 'r')
+#AR_file = open('ARsmall.txt', 'r')#
 
 line = 'void'
 while line != '' and line[0] != '>':
@@ -80,28 +72,27 @@ while line != '':
     
     # Finding all the posible kmers
     kmer_list = FindKmer(dna, kmer_length)
-    # Adding all posible kmers to the relevant AR gene
+
+    #For making the total count later
+    if header not in nKmer_per_AR:
+        nKmer_per_AR[header] = 0
 
     # TODO make as function
     for kmer in kmer_list:
         # If the kmer is allready assigned to an AR gene, add the additional
-        if kmer in AR_to_kmers:
-            AR_to_kmers[kmer]["AR_genes"].add(header)
+        if kmer in DataStructure:
+            DataStructure[kmer]["AR_genes"].add(header)
         # Else add the kmer to the datastructure
         else:
-            AR_to_kmers[kmer] = {"count":0, "AR_genes":{header}}
+            DataStructure[kmer] = {"count":0, "AR_genes":{header}}
 
-
-
-# Dict used to store each found kmer, 
-nKmer_per_AR = dict()
 
 
 
 ## Reading in the sequenceing file
 
-filename = "smallfastaseq.txt.gz"
-#filename = "Unknown3_raw_reads_1.txt.gz"
+#filename = "smallfastaseq.txt.gz"
+filename = "Unknown3_raw_reads_1.txt.gz"
 sample_file = gzip.open(filename, "r")
 
 last_line = ""
@@ -116,15 +107,15 @@ for line in sample_file:
         # Find all posible kmers
         kmer_list = FindKmer(dna, kmer_length)
         # Count the foind posible kmers
-        CountEachKmer(kmer_list, AR_to_kmers)
+        CountEachKmer(kmer_list, DataStructure)
         
     last_line = line
+    
+print(nKmer_per_AR)
 
-print(AR_to_kmers)
+CountKmerPerAR(nKmer_per_AR, DataStructure)
 
-#CountKmerPerAR(nKmer_per_AR, AR_to_kmers, kmer_count)
-#print(nKmer_per_AR)
-
+print(nKmer_per_AR)
 
 
 AR_file.close()
