@@ -33,6 +33,8 @@ def Count(list,KmCount,header,ARCount):
     ARCount[header] = list
 
 
+
+
 finalcount = dict()
 KmerList = list()
 KmCount = dict()
