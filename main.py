@@ -65,7 +65,7 @@ def AddToDatastructure(Data_Structure, kmer_list, header):
                 
 
 # Set the kmer lenght to look for
-kmer_length = 5
+kmer_length = 19
 # Stores {Kmer: {"count":0,{"AR":}}}, The Kmer as key, and then both the number of time it is seen, and the AR genes which has the kmer
 Data_Structure = dict()
 Could_be_kmers = dict()
