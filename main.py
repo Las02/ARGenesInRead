@@ -24,13 +24,11 @@ def FindKmer(dna, kmer_len):
 
     return kmer_list
 
-def CountEachKmer(kmer_list, kmer_count):
+def CountEachKmer(kmer_list, AR_to_kmers):
     '''Counts the amount of each kmer in the dict: kmer_count'''
     for kmer in kmer_list:
-        if kmer in kmer_count:
-            kmer_count[kmer] += 1
-        else:
-            kmer_count[kmer] = 1
+        if kmer in AR_to_kmers:
+            AR_to_kmers[kmer]["count"] += 1
 
 def CountKmerPerAR(nKmer_per_AR, AR_to_kmers, kmer_count):
     '''Counts the amount of all kmers for each AntibioticResistence Gene in the dict: nKmer_per_AR'''
@@ -49,15 +47,15 @@ def CountKmerPerAR(nKmer_per_AR, AR_to_kmers, kmer_count):
 
 
 # Set the kmer lenght to look for
-kmer_length = 6
+kmer_length = 5
 # Store which Antibiotic Resistence (AR) gene has which kmers
 AR_to_kmers = dict()
 Could_be_kmers = dict()
 
 ## Reading in the Antibiotic Resistence (AR) File 
 
-AR_file = open('resistance_genes.fsa.txt', 'r')
-#AR_file = open('ARsmall.txt', 'r')#
+#AR_file = open('resistance_genes.fsa.txt', 'r')
+AR_file = open('ARsmall.txt', 'r')#
 
 line = 'void'
 while line != '' and line[0] != '>':
@@ -83,16 +81,27 @@ while line != '':
     # Finding all the posible kmers
     kmer_list = FindKmer(dna, kmer_length)
     # Adding all posible kmers to the relevant AR gene
-    AR_to_kmers[header] = set(kmer_list)  
+
+    # TODO make as function
+    for kmer in kmer_list:
+        # If the kmer is allready assigned to an AR gene, add the additional
+        if kmer in AR_to_kmers:
+            AR_to_kmers[kmer]["AR_genes"].add(header)
+        # Else add the kmer to the datastructure
+        else:
+            AR_to_kmers[kmer] = {"count":0, "AR_genes":{header}}
+
+
 
 # Dict used to store each found kmer, 
-kmer_count = dict() 
 nKmer_per_AR = dict()
+
+
 
 ## Reading in the sequenceing file
 
-#filename = "smallfastaseq.txt.gz"
-filename = "Unknown3_raw_reads_1.txt.gz"
+filename = "smallfastaseq.txt.gz"
+#filename = "Unknown3_raw_reads_1.txt.gz"
 sample_file = gzip.open(filename, "r")
 
 last_line = ""
@@ -107,13 +116,14 @@ for line in sample_file:
         # Find all posible kmers
         kmer_list = FindKmer(dna, kmer_length)
         # Count the foind posible kmers
-        CountEachKmer(kmer_list, kmer_count)
+        CountEachKmer(kmer_list, AR_to_kmers)
         
     last_line = line
 
+print(AR_to_kmers)
 
-CountKmerPerAR(nKmer_per_AR, AR_to_kmers, kmer_count)
-print(nKmer_per_AR)
+#CountKmerPerAR(nKmer_per_AR, AR_to_kmers, kmer_count)
+#print(nKmer_per_AR)
 
 
 
