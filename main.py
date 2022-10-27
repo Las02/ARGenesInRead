@@ -66,7 +66,7 @@ def AddToDatastructure(Data_Structure, kmer_list, header):
                 
 
 # Set the kmer lenght to look for
-kmer_length = 19
+kmer_length = 5
 # Stores {Kmer: {"count":0,{"AR":}}}, The Kmer as key, and then both the number of time it is seen, and the AR genes which has the kmer
 Data_Structure = dict()
 Could_be_kmers = dict()
@@ -74,10 +74,10 @@ nKmer_per_AR = dict()
 
 ## Reading in the Antibiotic Resistence (AR) File 
 
-AR_file = open('resistance_genes.fsa.txt', 'r')
-filename = "Unknown3_raw_reads_1.txt.gz"
-#AR_file = open('ARsmall.txt', 'r')
-#filename = "smallfastaseq.txt.gz"
+#AR_file = open('resistance_genes.fsa.txt', 'r')
+#filename = "Unknown3_raw_reads_1.txt.gz"
+AR_file = open('ARsmall.txt', 'r')
+filename = "smallfastaseq.txt.gz"
 
 line = 'void'
 while line != '' and line[0] != '>':
