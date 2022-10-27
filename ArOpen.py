@@ -5,7 +5,20 @@ import re
 
 from findkmer import FindKmer
 
+def Count(list,KmCount,header,ARCount):
+    for Kmer in list:
+        ARCount[header] = []
+        if Kmer in KmCount:
+            KmCount[Kmer] += 1
+        else:
+            KmCount[Kmer] = 1
+        ARCount[header] += Kmer
+
+
+
 KmerList = list()
+KmCount = dict()
+ARCount = dict()
 
 #Reading the resistance genes file
 line = 'void'
@@ -14,7 +27,8 @@ while line != '' and line[0] != '>':
     line = ResistanceGenes.readline()
 while line != '':
     line = line.strip()
-    print(line)
+    header = line
+    #print(line)
     dna = ''
     line = ResistanceGenes.readline()
     while line != "" and line[0] != '>':
@@ -24,6 +38,7 @@ while line != '':
             sys.exit(1)
         dna += line
         line = ResistanceGenes.readline()
-    KmerList += FindKmer(dna,19)
+    KmerList = FindKmer(dna,19)
+    Count(KmerList,KmCount,header,ARCount)
 
-print(KmerList)
+print(ARCount)
