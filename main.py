@@ -18,14 +18,16 @@ def FindKmer(dna, kmer_len):
         return
 
     kmer_list = []
+    range_list = []
     from_range = 0
     to_range = len(dna) - kmer_len + 1   #+1 to also add last kmer
     for i in range(from_range, to_range):
 
         kmer = dna[i: i + kmer_len]
         kmer_list.append(kmer)
+        range_list.append([i, i + kmer_len, len(dna)])
 
-    return kmer_list
+    return kmer_list,range_list
 
 def CountEachKmer(kmer_list, Data_Structure):
     '''Counts the amount of each kmer in the dict: kmer_count'''
@@ -46,37 +48,59 @@ def CountKmerPerAR(nKmer_per_AR, Data_Structure):
                 pass
 
             elif AR_gene in nKmer_per_AR:
-                nKmer_per_AR[AR_gene] += data["count"]
+                from_to_len = data["AR_genes"][AR_gene]
+                AddDepth(from_to_len, data, nKmer_per_AR, AR_gene)
             
             else:
-                nKmer_per_AR[AR_gene] = data["count"]
+                # Extract [from, to, len(dna)]
+                from_to_len = data["AR_genes"][AR_gene]
+                # Make vector of [0] to represent depht of each nt
+                length_of_gene = from_to_len[2]
+                nKmer_per_AR[AR_gene] = [0] * length_of_gene
+
+                # Add the count for the kmer to the specific place
+                AddDepth(from_to_len, data, nKmer_per_AR, AR_gene)
+                
+                
+def AddDepth(from_to_len, data, nKmer_per_AR, AR_gene):
+    from_range = from_to_len[0]
+    to_range = from_to_len[1]
+    add = data["count"]
+    for i in range(from_range, to_range):
+        nKmer_per_AR[AR_gene][i] += data["count"]
 
 
-def AddToDatastructure(Data_Structure, kmer_list, header):
+
+
+
+def AddToDatastructure(Data_Structure, kmer_list, header, range_list):
     """Adds the kmer_list and header to the Data_structure """
-    for kmer in kmer_list:
+    for i in range(len(kmer_list)):
+        kmer = kmer_list[i]
+        kmer_range = range_list[i]
+
         # If the kmer is allready assigned to an AR gene, add the additional
         if kmer in Data_Structure:
-            Data_Structure[kmer]["AR_genes"].add(header)
+            Data_Structure[kmer]["AR_genes"][header] = (kmer_range)
         # Else add the kmer to the datastructure
         else:
-            Data_Structure[kmer] = {"count":0, "AR_genes":{header}}
-
+            Data_Structure[kmer] = {"count":0, "AR_genes":{header:kmer_range}}
                 
 
 # Set the kmer lenght to look for
-kmer_length = 19
+kmer_length = 5
 # Stores {Kmer: {"count":0,{"AR":}}}, The Kmer as key, and then both the number of time it is seen, and the AR genes which has the kmer
 Data_Structure = dict()
 Could_be_kmers = dict()
 nKmer_per_AR = dict()
 
+
 ## Reading in the Antibiotic Resistence (AR) File 
 
-AR_file = open('resistance_genes.fsa.txt', 'r')
-filename = "Unknown3_raw_reads_1.txt.gz"
-#AR_file = open('ARsmall.txt', 'r')
-#filename = "smallfastaseq.txt.gz"
+#AR_file = open('resistance_genes.fsa.txt', 'r')
+#filename = "Unknown3_raw_reads_1.txt.gz"
+AR_file = open('ARsmall.txt', 'r')
+filename = "smallfastaseq.txt.gz"
 
 line = 'void'
 while line != '' and line[0] != '>':
@@ -100,10 +124,10 @@ while line != '':
         line = AR_file.readline()
     
     # Finding all the posible kmers
-    kmer_list = FindKmer(dna, kmer_length)
+    (kmer_list, range_list) = FindKmer(dna, kmer_length)
 
     # Adding the kmer_list and header to the Data_structure 
-    AddToDatastructure(Data_Structure, kmer_list, header)
+    AddToDatastructure(Data_Structure, kmer_list, header, range_list)
 
 
 ## Reading in the sequenceing file
@@ -121,7 +145,7 @@ for line in sample_file:
         dna = line.strip()
 
         # Find all posible kmers
-        kmer_list = FindKmer(dna, kmer_length)
+        (kmer_list, range_list) = FindKmer(dna, kmer_length)
         # Count the foind posible kmers
         CountEachKmer(kmer_list, Data_Structure)
         
@@ -130,8 +154,10 @@ for line in sample_file:
 
 CountKmerPerAR(nKmer_per_AR, Data_Structure)
 
-print(nKmer_per_AR)
-
+for i in nKmer_per_AR.values():
+    count = sum(i)/kmer_length
+    print(count)
+#Count found to be: 129.0, 118.0
 
 AR_file.close()
 sample_file.close()
