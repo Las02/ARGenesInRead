@@ -16,5 +16,3 @@ def FindKmer(dna, kmer_len = 3):
         kmer_list.append(kmer)
 
     return kmer_list
-
-print(FindKmer("ATGAT", 3))
