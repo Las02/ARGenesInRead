@@ -56,7 +56,8 @@ Could_be_kmers = dict()
 
 ## Reading in the Antibiotic Resistence (AR) File 
 
-AR_file = open('ARsmall.txt', 'r')
+AR_file = open('resistance_genes.fsa.txt', 'r')
+#AR_file = open('ARsmall.txt', 'r')#
 
 line = 'void'
 while line != '' and line[0] != '>':
@@ -90,7 +91,8 @@ nKmer_per_AR = dict()
 
 ## Reading in the sequenceing file
 
-filename = "smallfastaseq.txt.gz"
+#filename = "smallfastaseq.txt.gz"
+filename = "Unknown3_raw_reads_1.txt.gz"
 sample_file = gzip.open(filename, "r")
 
 last_line = ""
