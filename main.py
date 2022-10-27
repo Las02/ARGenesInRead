@@ -1,11 +1,3 @@
-
-"""
-real    1m52.000s
-user    1m46.734s
-sys     0m2.438s
-
-"""
-
 import sys
 import re
 import gzip
@@ -29,47 +21,40 @@ def FindKmer(dna, kmer_len):
 
     return kmer_list,range_list
 
-def CountEachKmer(kmer_list, Data_Structure):
+def CountEachKmer(kmer_list, Data_Structure, nKmer_per_AR):
     '''Counts the amount of each kmer in the dict: kmer_count'''
+
+    # Goes through each found kmer
     for kmer in kmer_list:
+        # If the kmer is equal to an AR gene
         if kmer in Data_Structure:
-            Data_Structure[kmer]["count"] += 1
-
-def CountKmerPerAR(nKmer_per_AR, Data_Structure):
-    '''Counts the amount of all kmers for each AntibioticResistence Gene in the dict: nKmer_per_AR'''
-
-    # Goes trough each kmer
-    for data in Data_Structure.values():
-
-        # Go through each AR_gene for which the kmer was found and add the count to it
-        for AR_gene in data["AR_genes"]:
-            
-            if data["count"] == 0:
-                pass
-
-            elif AR_gene in nKmer_per_AR:
-                from_to_len = data["AR_genes"][AR_gene]
-                AddDepth(from_to_len, data, nKmer_per_AR, AR_gene)
-            
-            else:
-                # Extract [from, to, len(dna)]
-                from_to_len = data["AR_genes"][AR_gene]
-                # Make vector of [0] to represent depht of each nt
-                length_of_gene = from_to_len[2]
-                nKmer_per_AR[AR_gene] = [0] * length_of_gene
-
-                # Add the count for the kmer to the specific place
-                AddDepth(from_to_len, data, nKmer_per_AR, AR_gene)
+            data = Data_Structure[kmer]
+    
+            # Go through each AR_gene for which the kmer was found and add the count to it
+            for AR_gene in data["AR_genes"]:
                 
+                if AR_gene in nKmer_per_AR:
+                    from_to_len = data["AR_genes"][AR_gene]
+                    AddDepth(from_to_len, nKmer_per_AR, AR_gene)
                 
-def AddDepth(from_to_len, data, nKmer_per_AR, AR_gene):
+                else:
+                    # Extract [from, to, len(dna)]
+                    from_to_len = data["AR_genes"][AR_gene]
+                    # Make vector of [0] to represent depht of each nt
+                    length_of_gene = from_to_len[2]
+                    nKmer_per_AR[AR_gene] = [0] * length_of_gene
+
+                    # Add the count for the kmer to the specific place
+                    AddDepth(from_to_len, nKmer_per_AR, AR_gene)
+            
+
+                
+def AddDepth(from_to_len, nKmer_per_AR, AR_gene):
     from_range = from_to_len[0]
     to_range = from_to_len[1]
-    add = data["count"]
+    add = 1
     for i in range(from_range, to_range):
-        nKmer_per_AR[AR_gene][i] += data["count"]
-
-
+        nKmer_per_AR[AR_gene][i] += 1
 
 
 
@@ -84,12 +69,12 @@ def AddToDatastructure(Data_Structure, kmer_list, header, range_list):
             Data_Structure[kmer]["AR_genes"][header] = (kmer_range)
         # Else add the kmer to the datastructure
         else:
-            Data_Structure[kmer] = {"count":0, "AR_genes":{header:kmer_range}}
+            Data_Structure[kmer] = {"AR_genes":{header:kmer_range}}
                 
 
 # Set the kmer lenght to look for
 kmer_length = 5
-# Stores {Kmer: {"count":0,{"AR":}}}, The Kmer as key, and then both the number of time it is seen, and the AR genes which has the kmer
+# Stores {Kmer: {{"AR":}}}, The Kmer as key, and then both the number of time it is seen, and the AR genes which has the kmer
 Data_Structure = dict()
 Could_be_kmers = dict()
 nKmer_per_AR = dict()
@@ -147,12 +132,10 @@ for line in sample_file:
         # Find all posible kmers
         (kmer_list, range_list) = FindKmer(dna, kmer_length)
         # Count the foind posible kmers
-        CountEachKmer(kmer_list, Data_Structure)
+        CountEachKmer(kmer_list, Data_Structure, nKmer_per_AR)
         
     last_line = line
     
-
-CountKmerPerAR(nKmer_per_AR, Data_Structure)
 
 for i in nKmer_per_AR.values():
     count = sum(i)/kmer_length
