@@ -13,27 +13,24 @@ def FinalCounter(finalcount, ARCount, KmCount):
         kmerlist = AR[1]
         count = 0
         for kmer in kmerlist:
-            count += KmCount[kmer]
+            if not kmer in KmCount:
+                print(kmer, "is not in Kmcount")
+            else:
+                count += KmCount[kmer]
         
         finalcount[AR[0]] = count
 
 
     
-def Count(list,KmCount,header,ARCount):
+def Count(list,KmCount):
     for Kmer in list:
-
-        # Den her skal over ift til den anden fil
-        ARCount[header] = []
         if Kmer in KmCount:
             KmCount[Kmer] += 1
         else:
             KmCount[Kmer] = 1
-        
-        # Men ikke den her del som skal blive
+
+def addToARcount(ARCount, list, header):
     ARCount[header] = list
-
-
-
 
 finalcount = dict()
 KmerList = list()
@@ -45,22 +42,74 @@ line = 'void'
 
 while line != '' and line[0] != '>':
     line = ResistanceGenes.readline()
+
 while line != '':
     line = line.strip()
     header = line
-    #print(line)
     dna = ''
     line = ResistanceGenes.readline()
     while line != "" and line[0] != '>':
+
         line = re.sub("\s", "", line).upper()
         if re.search("[^ATGC]", line) is not None:
             print("Invalid sequence line: " + line)
             sys.exit(1)
+
         dna += line
         line = ResistanceGenes.readline()
-    KmerList = FindKmer(dna,19)
-    Count(KmerList,KmCount,header,ARCount)
+    Kmer_list = FindKmer(dna,19)
+    addToARcount(ARCount, Kmer_list, header)
 
-#print(ARCount)
+#########################################
+#FASTAQ
+
+import gzip
+
+filename = "Unknown3_raw_reads_1.txt.gz"
+sample_file = gzip.open(filename, "r")
+
+last_line = ""
+i=0
+for line in sample_file:
+    line = line.decode("utf-8") 
+
+    if last_line.startswith("@"):
+        dna = line.strip()
+
+        Kmer_list = FindKmer(dna,19)
+        Count(Kmer_list, KmCount)
+
+    # Break early for testing
+    i+=1
+    if i == 10:
+        break
+
+    last_line = line
+
+
 FinalCounter(finalcount, ARCount, KmCount)
-print(finalcount)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# ARCount is now done
+
+
+
+
+
+#FinalCounter(finalcount, ARCount, KmCount)
+#print(finalcount)
