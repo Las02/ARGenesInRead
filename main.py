@@ -19,7 +19,7 @@ def FindKmer(dna, kmer_len):
         kmer_list.append(kmer)
         range_list.append([i, len(dna)])
 
-    return kmer_list,range_list
+    return kmer_list, range_list
 
 def CountEachKmer(kmer_list, Data_Structure, nKmer_per_AR):
     '''Counts the amount of each kmer in the dict: kmer_count'''
@@ -73,6 +73,7 @@ def AddToDatastructure(Data_Structure, kmer_list, header, range_list):
 
 # Set the kmer lenght to look for
 kmer_length = 19
+
 # Stores {Kmer: {"AR":kmer_range}}, The Kmer as key. 
 #then there is a inner dict with the AR gene as key and the kmer_ range as values
 Data_Structure = dict()
@@ -108,7 +109,7 @@ while line != '':
         dna += line
         line = AR_file.readline()
     
-    # Finding all the posible kmers
+    # Finding all the posible kmers and its positions
     (kmer_list, range_list) = FindKmer(dna, kmer_length)
 
     # Adding the kmer_list and header to the Data_structure 
