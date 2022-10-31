@@ -73,8 +73,8 @@ def AddToDatastructure(Data_Structure, kmer_list, header, range_list):
 
 # Set the kmer lenght to look for
 kmer_length = 19
-# Stores {Kmer: {{"AR":}}}, The Kmer as key, and then another dict with AR gene as key 
-#and the startrange for the kmer position in the AR gene, and the length of the AR gene
+# Stores {Kmer: {"AR":kmer_range}}, The Kmer as key. 
+#then there is a inner dict with the AR gene as key and the kmer_ range as values
 Data_Structure = dict()
 Could_be_kmers = dict()
 nKmer_per_AR = dict()
