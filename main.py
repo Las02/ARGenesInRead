@@ -83,9 +83,9 @@ nKmer_per_AR = dict()
 
 ## Reading in the Antibiotic Resistence (AR) File 
 
-AR_file = open('resistance_genes.fsa.txt', 'r')
-filename = "Unknown3_raw_reads_1.txt.gz"
-#AR_file = open('ARsmall.txt', 'r')
+#AR_file = open('resistance_genes.fsa.txt', 'r')
+#filename = "Unknown3_raw_reads_1.txt.gz"
+AR_file = open('ARsmall.txt', 'r')
 #filename = "smallfastaseq.txt.gz"
 
 line = 'void'
@@ -116,51 +116,12 @@ while line != '':
     AddToDatastructure(Data_Structure, kmer_list, header, range_list)
 
 
-## Reading in the sequenceing file
+read = "ATCG"
 
+read_length = len(read)
+readcount = [0] * read_length
 
-sample_file = gzip.open(filename, "r")
+kmerlist = FindKmer(read,2)
 
-last_line = ""
-for line in sample_file:
-    line = line.decode("utf-8") 
-
-    # Extracting only the dna
-    # TODO hver 110% sikre på at den ikke kan være på 2 linjer
-    if last_line.startswith("@"):
-        dna = line.strip()
-
-        # Find all posible kmers
-        (kmer_list, range_list) = FindKmer(dna, kmer_length)
-        # Count the foind posible kmers
-        CountEachKmer(kmer_list, Data_Structure, nKmer_per_AR)
-        
-    last_line = line
-    
-
-
-# Quick print the found values
-# And the depht of each pp
-for item in nKmer_per_AR.items():
-    count = sum(item[1])/kmer_length
-    print("*"*50)
-    print("AR genename:", item[0], end="\t")
-    print("kmers matching:", count)
-    #print("The depht of each position:")
-    #print(item[1])
-    print("*"*50)
-print("kmers of size:", kmer_length)
-#Count found to be: 129.0, 118.0
-
-"""
-real    2m18.392s
-user    2m15.391s
-sys     0m2.047s
-"""
-
-
-
-
-AR_file.close()
-sample_file.close()
-
+print(kmerlist)
+print(Data_Structure)
