@@ -72,7 +72,7 @@ def AddToDatastructure(Data_Structure, kmer_list, header, range_list):
                 
 
 # Set the kmer lenght to look for
-kmer_length = 19
+kmer_length = 3
 
 # Stores {Kmer: {"AR":kmer_range}}, The Kmer as key. 
 #then there is a inner dict with the AR gene as key and the kmer_ range as values
@@ -116,12 +116,25 @@ while line != '':
     AddToDatastructure(Data_Structure, kmer_list, header, range_list)
 
 
-read = "ATCG"
+read = "ATCGT"
 
 read_length = len(read)
 readcount = [0] * read_length
 
-kmerlist = FindKmer(read,2)
+(kmerlist, range_list) = FindKmer(read, kmer_length)
 
-print(kmerlist)
-print(Data_Structure)
+
+threshhold = 2
+
+start_of_gene = kmerlist[0: threshhold]
+for i in range(len(start_of_gene)):
+    kmer = start_of_gene[i]
+
+    if kmer in Data_Structure:
+       for gene_name in Data_Structure[kmer]:
+            start_of_codon = range_list[i][0]
+            readcount[start_of_codon: start_of_codon + kmer_length] = [gene_name] * kmer_length
+    else:
+        pass
+
+print(readcount)
