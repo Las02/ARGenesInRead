@@ -54,7 +54,7 @@ def AddDepth(from_to_len, nKmer_per_AR, AR_gene):
     to_range = from_range + kmer_length
     add = 1
     for i in range(from_range, to_range):
-        nKmer_per_AR[AR_gene][i] += 1
+        nKmer_per_AR[AR_gene][i] = 1
 
 
 def AddToDatastructure(Data_Structure, kmer_list, header, range_list):
@@ -82,10 +82,10 @@ Could_be_kmers = dict()
 
 ## Reading in the Antibiotic Resistence (AR) File 
 
-#AR_file = open('resistance_genes.fsa.txt', 'r')
-#filename = "Unknown3_raw_reads_1.txt.gz"
-AR_file = open('ARsmall.txt', 'r')
-filename = "smallfastaseq.txt.gz"
+AR_file = open('resistance_genes.fsa.txt', 'r')
+filename = "Unknown3_raw_reads_1.txt.gz"
+#AR_file = open('ARsmall.txt', 'r')
+#filename = "smallfastaseq.txt.gz"
 
 line = 'void'
 while line != '' and line[0] != '>':
@@ -134,10 +134,28 @@ for line in sample_file:
         # Count the found posible kmers
         nKmer_per_AR = dict()
         CountEachKmer(kmer_list, Data_Structure, nKmer_per_AR)
-        print(nKmer_per_AR)
+        
+        gene_count = dict()
 
+        # Do some check with it
+        for genename,gene in nKmer_per_AR.items():
+            # For at noget tager tid 
+            count = 0
+            for i in gene:
+                count += 1
+            
+            check = count > 10  # en fancy function
+            if check:
+                # Add den til final count
+                if genename in gene_count:
+                    gene_count[genename]+= nKmer_per_AR 
+                else :
+                    gene_count[genename] = nKmer_per_AR 
+                
     last_line = line
     
+
+#print(gene_count)
 
 """
 # Quick print the found values
@@ -153,11 +171,11 @@ for item in nKmer_per_AR.items():
 print("kmers of size:", kmer_length)
 #Count found to be: 129.0, 118.0
 
-"""
+
 real    2m18.392s
 user    2m15.391s
 sys     0m2.047s
-"""
+
 """
 
 
