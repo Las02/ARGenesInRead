@@ -2,6 +2,45 @@ import sys
 import re
 import gzip
 
+
+def judge(dna):
+
+    max_space = 2
+    side_bonus = 1
+    threshold_score = 2
+
+    maxcount = 0
+    count = 0
+    exitcount = 0
+    in_kmer = False
+    len_dna = len(dna)
+
+    for pos,value in enumerate(dna):
+
+        if value == 1:
+            in_kmer = True
+
+        if in_kmer:
+
+            if value == 0:
+                exitcount += 1
+            else:
+                count += 1
+
+                if pos in [0, len_dna-1]:
+                    count += side_bonus
+
+            if count > maxcount:
+                maxcount = count
+                
+
+            if exitcount >= max_space:
+                count = 0
+                exitcount = 0
+                in_kmer = False
+    
+    return maxcount >= threshold_score   
+
 def FindKmer(dna, kmer_len):
     '''Find Kmers from dna string and return list with them'''
 
@@ -139,32 +178,24 @@ for line in sample_file:
 
         # Do some check with it
         for genename,gene in nKmer_per_AR.items():
-            # For at noget tager tid 
-            count = 0
-            for i in gene:
-                count += 1
-            
-            check = count > 10  # en fancy function
-            if check:
+            if judge(gene):
                 # Add den til final count
                 if genename in gene_count:
-                    gene_count[genename]+= nKmer_per_AR 
+                    gene_count[genename] += gene 
                 else :
-                    gene_count[genename] = nKmer_per_AR 
+                    gene_count[genename] = gene 
                 
     last_line = line
     
-
-#print(gene_count)
-
 """
+
 # Quick print the found values
 # And the depht of each pp
-for item in nKmer_per_AR.items():
-    count = sum(item[1])/kmer_length
+for item in gene_count.items():
+    count = sum(item[1])
     print("*"*50)
     print("AR genename:", item[0], end="\t")
-    print("kmers matching:", count)
+    print("coverage:", count, "out of", len(item[1]), "positons")
     #print("The depht of each position:")
     #print(item[1])
     print("*"*50)
@@ -172,12 +203,7 @@ print("kmers of size:", kmer_length)
 #Count found to be: 129.0, 118.0
 
 
-real    2m18.392s
-user    2m15.391s
-sys     0m2.047s
-
 """
-
 
 
 AR_file.close()
