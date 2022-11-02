@@ -78,15 +78,14 @@ kmer_length = 19
 #then there is a inner dict with the AR gene as key and the kmer_ range as values
 Data_Structure = dict()
 Could_be_kmers = dict()
-nKmer_per_AR = dict()
 
 
 ## Reading in the Antibiotic Resistence (AR) File 
 
-AR_file = open('resistance_genes.fsa.txt', 'r')
-filename = "Unknown3_raw_reads_1.txt.gz"
-#AR_file = open('ARsmall.txt', 'r')
-#filename = "smallfastaseq.txt.gz"
+#AR_file = open('resistance_genes.fsa.txt', 'r')
+#filename = "Unknown3_raw_reads_1.txt.gz"
+AR_file = open('ARsmall.txt', 'r')
+filename = "smallfastaseq.txt.gz"
 
 line = 'void'
 while line != '' and line[0] != '>':
@@ -132,13 +131,15 @@ for line in sample_file:
 
         # Find all posible kmers
         (kmer_list, range_list) = FindKmer(dna, kmer_length)
-        # Count the foind posible kmers
+        # Count the found posible kmers
+        nKmer_per_AR = dict()
         CountEachKmer(kmer_list, Data_Structure, nKmer_per_AR)
-        
+        print(nKmer_per_AR)
+
     last_line = line
     
 
-
+"""
 # Quick print the found values
 # And the depht of each pp
 for item in nKmer_per_AR.items():
@@ -157,7 +158,7 @@ real    2m18.392s
 user    2m15.391s
 sys     0m2.047s
 """
-
+"""
 
 
 
