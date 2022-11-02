@@ -16,24 +16,20 @@ def judge(dna):
     len_dna = len(dna)
 
     for pos,value in enumerate(dna):
-
-        if value == 1:
-            in_kmer = True
+        if value == 1: in_kmer = True
 
         if in_kmer:
-
             if value == 0:
                 exitcount += 1
             else:
                 count += 1
-
+                # If at either side position, add a bonus to the score
                 if pos in [0, len_dna-1]:
                     count += side_bonus
 
             if count > maxcount:
                 maxcount = count
-                
-
+            
             if exitcount >= max_space:
                 count = 0
                 exitcount = 0
