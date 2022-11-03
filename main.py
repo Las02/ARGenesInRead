@@ -107,7 +107,7 @@ def AddToDatastructure(Data_Structure, kmer_list, header, range_list):
                 
 
 # Set the kmer lenght to look for
-kmer_length = 5
+kmer_length = 19
 
 # Stores {Kmer: {"AR":kmer_range}}, The Kmer as key. 
 #then there is a inner dict with the AR gene as key and the kmer_ range as values
@@ -117,10 +117,10 @@ Could_be_kmers = dict()
 
 ## Reading in the Antibiotic Resistence (AR) File 
 
-#AR_file = open('resistance_genes.fsa.txt', 'r')
-#filename = "Unknown3_raw_reads_1.txt.gz"
-AR_file = open('ARsmall.txt', 'r')
-filename = "smallfastaseq.txt.gz"
+AR_file = open('resistance_genes.fsa.txt', 'r')
+filename = "Unknown3_raw_reads_1.txt.gz"
+#AR_file = open('ARsmall.txt', 'r')
+#filename = "smallfastaseq.txt.gz"
 
 line = 'void'
 while line != '' and line[0] != '>':
