@@ -3,19 +3,19 @@ import re
 import gzip
 
 
-def judge(dna):
+def judge(gene, read):
 
-    max_space = 2
-    side_bonus = 1
-    threshold_score = 2
+    max_space = 1
+    side_bonus = int(0.5 * len(read))
+    threshold_score = int(0.9 *len(read))
 
     maxcount = 0
     count = 0
     exitcount = 0
     in_kmer = False
-    len_dna = len(dna)
+    len_dna = len(gene)
 
-    for pos,value in enumerate(dna):
+    for pos,value in enumerate(gene):
         if value == 1: in_kmer = True
 
         if in_kmer:
@@ -118,7 +118,8 @@ Could_be_kmers = dict()
 ## Reading in the Antibiotic Resistence (AR) File 
 
 AR_file = open('resistance_genes.fsa.txt', 'r')
-filename = "Unknown3_raw_reads_1.txt.gz"
+#filename = "Unknown3_raw_reads_1.txt.gz"
+filename = "test.read.txt.gz"
 #AR_file = open('ARsmall.txt', 'r')
 #filename = "smallfastaseq.txt.gz"
 
@@ -154,6 +155,7 @@ while line != '':
 
 
 sample_file = gzip.open(filename, "r")
+gene_count = dict()
 
 last_line = ""
 for line in sample_file:
@@ -169,12 +171,10 @@ for line in sample_file:
         # Count the found posible kmers
         nKmer_per_AR = dict()
         CountEachKmer(kmer_list, Data_Structure, nKmer_per_AR)
-        
-        gene_count = dict()
 
         # Do some check with it
         for genename,gene in nKmer_per_AR.items():
-            if judge(gene):
+            if judge(gene, dna):
                 # Add den til final count
                 if genename in gene_count:
                     for i in range(len(gene_count[genename])):
@@ -185,23 +185,38 @@ for line in sample_file:
     last_line = line
 
 
-"""
+def find_coverage_depht(dna):
+    count = 0
+    total_depht = 0
 
-# Quick print the found values
-# And the depht of each pp
-for item in gene_count.items():
-    count = sum(item[1])
-    print("*"*50)
-    print("AR genename:", item[0], end="\t")
-    print("coverage:", count, "out of", len(item[1]), "positons")
-    #print("The depht of each position:")
-    #print(item[1])
-    print("*"*50)
-print("kmers of size:", kmer_length)
-#Count found to be: 129.0, 118.0
+    for base in dna:
+        total_depht += base
+
+        if base != 0:
+            count += 1
+        
+    coverage = count / len(dna)
+    avg_depht = total_depht / len(dna)
+    if coverage > 0.95 and avg_depht > 0.5:
+        return coverage, avg_depht
+    else:
+        return None, None
 
 
-"""
+coverage_depht = dict()
+for genename, dna in gene_count.items():
+    (coverage, avg_depht) = find_coverage_depht(dna)
+    if coverage != None:
+        coverage_depht[genename] = (coverage, avg_depht)             
+
+sorted_coverage_depht = sorted(coverage_depht, key= coverage_depht.get, reverse = True)
+
+
+for genename in sorted_coverage_depht:
+    coverage = coverage_depht[genename][0]
+    avg_depht = coverage_depht[genename][1]
+    (name,AR) = genename.split(maxsplit = 1)
+    print("Name:", name,"ARgene:", AR ,"coverage:",  coverage, "avg_depght: ",avg_depht)
 
 
 AR_file.close()
