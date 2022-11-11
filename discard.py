@@ -3,17 +3,18 @@ def read_fasta(filename):
     AR_file = open(filename, 'r')
     dna =""
 
-    line = AR_file.readline()
-    print(line)
-    while line != "":
-        if line[0] == (">"):
+    for line in AR_file:
+        if line[0] == ">":
             header = line
-        else: 
-            dna += line
-        line = AR_file.readline()
-    yield dna, header
-    AR_file.close()
+            dna = ""
+            print(header)
+        else:
+            dna += line[:-1]
+            if line == header:
+                break
+        print(dna)
 
-for dna, header in read_fasta("ARsmall.txt"):
-    print(header,dna.strip())
-    
+
+
+    return dna
+print(read_fasta("ARsmall.txt"))
