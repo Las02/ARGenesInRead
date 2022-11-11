@@ -1,41 +1,43 @@
 import sys
 import re
 import gzip
+def read_fasta(filename):
+    ## Reading in the Antibiotic Resistence (AR) File 
+    AR_file = open(filename, 'r')
+    line = 'void'
+    while line != '' and not line.startswith('>'):
+        line = AR_file.readline()
 
+    while line != '':
+        line = line.strip()
+        header = line
+        dna = ''
+        line = AR_file.readline()
+        while line != "" and line[0] != '>':
 
-def judge(gene, read):
-
-    max_space = 1
-    side_bonus = int(0.5 * len(read))
-    threshold_score = int(0.9 *len(read))
-
-    maxcount = 0
-    count = 0
-    exitcount = 0
-    in_kmer = False
-    len_dna = len(gene)
-
-    for pos,value in enumerate(gene):
-        if value == 1: in_kmer = True
-
-        if in_kmer:
-            if value == 0:
-                exitcount += 1
-            else:
-                count += 1
-                # If at either side position, add a bonus to the score
-                if pos in [0, len_dna-1]:
-                    count += side_bonus
-
-            if count > maxcount:
-                maxcount = count
-            
-            if exitcount >= max_space:
-                count = 0
-                exitcount = 0
-                in_kmer = False
+            dna += line
+            line = AR_file.readline()
+        yield dna, header
+    AR_file.close()
     
-    return maxcount >= threshold_score   
+def read_qfasta(filename):
+    '''Extract the dna from a gzippedfastaQ file '''
+
+
+    sample_file = gzip.open(filename, "r")
+    
+    last_line = ""
+    for line in sample_file:
+        line = line.decode("utf-8") 
+
+        # Extracting only the dna
+        # TODO hver 110% sikre på at den ikke kan være på 2 linjer
+        if last_line.startswith("@"):
+            dna = line.strip()
+            yield dna
+                    
+        last_line = line
+    sample_file.close()
 
 def FindKmer(dna, kmer_len):
     '''Find Kmers from dna string and return list with them'''
@@ -86,7 +88,6 @@ def AddDepth(from_to_len, nKmer_per_AR, AR_gene):
     """Add the count for the kmer to the specific place"""
     from_range = from_to_len[0]
     to_range = from_range + kmer_length
-    add = 1
     for i in range(from_range, to_range):
         nKmer_per_AR[AR_gene][i] = 1
 
@@ -103,49 +104,8 @@ def AddToDatastructure(Data_Structure, kmer_list, header, range_list):
         else:
             Data_Structure[kmer] = {header:kmer_range}
 
-def read_fasta(filename):
-    ## Reading in the Antibiotic Resistence (AR) File 
-    AR_file = open(filename, 'r')
-    line = 'void'
-    while line != '' and line[0] != '>':
-        line = AR_file.readline()
-
-    while line != '':
-        line = line.strip()
-        header = line
-        dna = ''
-        line = AR_file.readline()
-        while line != "" and line[0] != '>':
-
-            # Quit the program if the found DNA is not DNA
-            # TODO Failer hvis DNA string starter med unkown eg. "N"
-            line = re.sub("\s", "", line).upper()
-            if re.search("[^ATGC]", line) is not None:
-                print("Invalid sequence line: " + line)
-                sys.exit(1)
-
-            dna += line
-            line = AR_file.readline()
-        yield dna, header
-    AR_file.close()
-    
-def read_qfasta(filename):
-    sample_file = gzip.open(filename, "r")
-    
-    last_line = ""
-    for line in sample_file:
-        line = line.decode("utf-8") 
-
-        # Extracting only the dna
-        # TODO hver 110% sikre på at den ikke kan være på 2 linjer
-        if last_line.startswith("@"):
-            dna = line.strip()
-            yield dna
-                    
-        last_line = line
-    sample_file.close()
-
 def find_coverage_depht(dna):
+
     count = 0
     total_depht = 0
 
@@ -161,6 +121,41 @@ def find_coverage_depht(dna):
         return coverage, avg_depht
     else:
         return None, None
+def judge(gene, read):
+
+    max_space = 1
+    side_bonus = int(0.5 * len(read))
+    threshold_score = int(0.9 *len(read))
+
+    maxcount = 0
+    count = 0
+    exitcount = 0
+    in_kmer = False
+    len_dna = len(gene)
+
+    for pos,value in enumerate(gene):
+        if value == 1: in_kmer = True
+
+        if in_kmer:
+            if value == 0:
+                exitcount += 1
+            else:
+                count += 1
+                # If at either side position, add a bonus to the score
+                if pos in [0, len_dna-1]:
+                    count += side_bonus
+
+            if count > maxcount:
+                maxcount = count
+            
+            if exitcount >= max_space:
+                count = 0
+                exitcount = 0
+                in_kmer = False
+    
+    return maxcount >= threshold_score   
+
+
 
 
 # Set the kmer lenght to look for
@@ -192,7 +187,6 @@ for dna, header in read_fasta(gene_filename):
 gene_count = dict()
 
 for dna in read_qfasta(read_filename):
-    print(dna)
     # Find all posible kmers
     (kmer_list, range_list) = FindKmer(dna, kmer_length)
     # Count the found posible kmers
