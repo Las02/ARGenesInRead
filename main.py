@@ -82,7 +82,6 @@ def CountEachKmer(kmer_list, Data_Structure, nKmer_per_AR):
                     # Add the count for the kmer to the specific place
                     AddDepth(from_to_len, nKmer_per_AR, AR_gene)
             
-
 def AddDepth(from_to_len, nKmer_per_AR, AR_gene):
     """Add the count for the kmer to the specific place"""
     from_range = from_to_len[0]
@@ -90,7 +89,6 @@ def AddDepth(from_to_len, nKmer_per_AR, AR_gene):
     add = 1
     for i in range(from_range, to_range):
         nKmer_per_AR[AR_gene][i] = 1
-
 
 def AddToDatastructure(Data_Structure, kmer_list, header, range_list):
     """Adds the kmer_list and header to the Data_structure """
@@ -104,86 +102,48 @@ def AddToDatastructure(Data_Structure, kmer_list, header, range_list):
         # Else add the kmer to the datastructure
         else:
             Data_Structure[kmer] = {header:kmer_range}
-                
 
-# Set the kmer lenght to look for
-kmer_length = 19
-
-# Stores {Kmer: {"AR":kmer_range}}, The Kmer as key. 
-#then there is a inner dict with the AR gene as key and the kmer_ range as values
-Data_Structure = dict()
-Could_be_kmers = dict()
-
-
-## Reading in the Antibiotic Resistence (AR) File 
-
-AR_file = open('resistance_genes.fsa.txt', 'r')
-#filename = "Unknown3_raw_reads_1.txt.gz"
-filename = "test.read.txt.gz"
-#AR_file = open('ARsmall.txt', 'r')
-#filename = "smallfastaseq.txt.gz"
-
-line = 'void'
-while line != '' and line[0] != '>':
-    line = AR_file.readline()
-
-while line != '':
-    line = line.strip()
-    header = line
-    dna = ''
-    line = AR_file.readline()
-    while line != "" and line[0] != '>':
-
-        # Quit the program if the found DNA is not DNA
-        # TODO Failer hvis DNA string starter med unkown eg. "N"
-        line = re.sub("\s", "", line).upper()
-        if re.search("[^ATGC]", line) is not None:
-            print("Invalid sequence line: " + line)
-            sys.exit(1)
-
-        dna += line
+def read_fasta(filename):
+    ## Reading in the Antibiotic Resistence (AR) File 
+    AR_file = open(filename, 'r')
+    line = 'void'
+    while line != '' and line[0] != '>':
         line = AR_file.readline()
+
+    while line != '':
+        line = line.strip()
+        header = line
+        dna = ''
+        line = AR_file.readline()
+        while line != "" and line[0] != '>':
+
+            # Quit the program if the found DNA is not DNA
+            # TODO Failer hvis DNA string starter med unkown eg. "N"
+            line = re.sub("\s", "", line).upper()
+            if re.search("[^ATGC]", line) is not None:
+                print("Invalid sequence line: " + line)
+                sys.exit(1)
+
+            dna += line
+            line = AR_file.readline()
+        yield dna, header
+    AR_file.close()
     
-    # Finding all the posible kmers and its positions
-    (kmer_list, range_list) = FindKmer(dna, kmer_length)
+def read_qfasta(filename):
+    sample_file = gzip.open(filename, "r")
+    
+    last_line = ""
+    for line in sample_file:
+        line = line.decode("utf-8") 
 
-    # Adding the kmer_list and header to the Data_structure 
-    AddToDatastructure(Data_Structure, kmer_list, header, range_list)
-
-
-## Reading in the sequenceing file
-
-
-sample_file = gzip.open(filename, "r")
-gene_count = dict()
-
-last_line = ""
-for line in sample_file:
-    line = line.decode("utf-8") 
-
-    # Extracting only the dna
-    # TODO hver 110% sikre på at den ikke kan være på 2 linjer
-    if last_line.startswith("@"):
-        dna = line.strip()
-
-        # Find all posible kmers
-        (kmer_list, range_list) = FindKmer(dna, kmer_length)
-        # Count the found posible kmers
-        nKmer_per_AR = dict()
-        CountEachKmer(kmer_list, Data_Structure, nKmer_per_AR)
-
-        # Do some check with it
-        for genename,gene in nKmer_per_AR.items():
-            if judge(gene, dna):
-                # Add den til final count
-                if genename in gene_count:
-                    for i in range(len(gene_count[genename])):
-                        gene_count[genename][i] += gene[i]    # Skal plusse element pr element  
-                else :
-                    gene_count[genename] = gene 
-                
-    last_line = line
-
+        # Extracting only the dna
+        # TODO hver 110% sikre på at den ikke kan være på 2 linjer
+        if last_line.startswith("@"):
+            dna = line.strip()
+            yield dna
+                    
+        last_line = line
+    sample_file.close()
 
 def find_coverage_depht(dna):
     count = 0
@@ -203,6 +163,53 @@ def find_coverage_depht(dna):
         return None, None
 
 
+# Set the kmer lenght to look for
+kmer_length = 4
+
+# Stores {Kmer: {"AR":kmer_range}}, The Kmer as key. 
+#then there is a inner dict with the AR gene as key and the kmer_ range as values
+Data_Structure = dict()
+Could_be_kmers = dict()
+
+#filename = "Unknown3_raw_reads_1.txt.gz"
+#read_filename = "test.read.txt.gz"
+gene_filename = 'ARsmall.txt'
+read_filename = "smallfastaseq.txt.gz"
+
+for dna, header in read_fasta(gene_filename):
+    # Finding all the posible kmers and its positions
+    (kmer_list, range_list) = FindKmer(dna, kmer_length)
+
+    # Adding the kmer_list and header to the Data_structure 
+    AddToDatastructure(Data_Structure, kmer_list, header, range_list)
+
+
+
+
+
+## Reading in the sequenceing file
+
+gene_count = dict()
+
+for dna in read_qfasta(read_filename):
+    print(dna)
+    # Find all posible kmers
+    (kmer_list, range_list) = FindKmer(dna, kmer_length)
+    # Count the found posible kmers
+    nKmer_per_AR = dict()
+    CountEachKmer(kmer_list, Data_Structure, nKmer_per_AR)
+
+    # Do some check with it
+    for genename,gene in nKmer_per_AR.items():
+        if judge(gene, dna):
+            # Add den til final count
+            if genename in gene_count:
+                for i in range(len(gene_count[genename])):
+                    gene_count[genename][i] += gene[i]    # Skal plusse element pr element  
+            else :
+                gene_count[genename] = gene 
+
+
 coverage_depht = dict()
 for genename, dna in gene_count.items():
     (coverage, avg_depht) = find_coverage_depht(dna)
@@ -218,7 +225,4 @@ for genename in sorted_coverage_depht:
     (name,AR) = genename.split(maxsplit = 1)
     print("Name:", name,"ARgene:", AR ,"coverage:",  coverage, "avg_depght: ",avg_depht)
 
-
-AR_file.close()
-sample_file.close()
 
