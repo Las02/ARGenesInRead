@@ -124,11 +124,14 @@ def judge(gene, read):
 
     return maxcount >= threshold_score
 
-
-
+#gene_filename = 'ARsmall.txt'
+#read_filename = "smallfastaseq.txt.gz"
+gene_filename = 'resistance_genes.fsa'
+read_filename = "Unknown3_raw_reads_1.txt.gz"
+#read_filename ="mini.txt.gz"
 
 # Set the kmer lenght to look for
-kmer_length = 15
+kmer_length = 19
 
 # Stores {Kmer: {"AR":kmer_range}}, The Kmer as key.
 #then there is a inner dict with the AR gene as key and the kmer_ range as values
@@ -136,11 +139,6 @@ gene_data = dict()
 Could_be_kmers = dict()
 
 
-#gene_filename = 'ARsmall.txt'
-#read_filename = "smallfastaseq.txt.gz"
-gene_filename = 'resistance_genes.fsa'
-read_filename = "Unknown3_raw_reads_1.txt.gz"
-#read_filename ="mini.txt.gz"
 for dna, header in read_fasta(gene_filename):
     # Finding all the posible kmers and its positions
     (kmer_list, range_list) = FindKmer(dna, kmer_length)
@@ -148,13 +146,9 @@ for dna, header in read_fasta(gene_filename):
     # Adding the kmer_list and header to the gene_data
     AddToDatastructure(gene_data, kmer_list, header, range_list)
 
-
-## Reading in the sequenceing file
-
 gene_count = dict()
 
 for dna in read_qfasta(read_filename):
-
     # Find all posible kmers
     (kmer_list, range_list) = FindKmer(dna, kmer_length)
 
@@ -173,6 +167,7 @@ for dna in read_qfasta(read_filename):
             else :
                 gene_count[genename] = gene
 
+
 def coverage_stats(dna):
     '''from depht array get return coverage, avg depht and min_depht'''
     count = 0
@@ -188,7 +183,7 @@ def coverage_stats(dna):
     avg_depht = total_depht / len(dna)
     return coverage, avg_depht, min_depth
 
-#print(gene_count)
+print(gene_count)   # adder ikke kestra på
 # Find the actual gene coverage
 coverage_depht = dict()
 for genename, dna in gene_count.items():
@@ -196,9 +191,7 @@ for genename, dna in gene_count.items():
     if coverage > 0.9 and avg_depht > 0.5:
         coverage_depht[genename] = (coverage, avg_depht)
 
-
 sorted_coverage_depht = sorted(coverage_depht, key= coverage_depht.get, reverse = True)
-
 
 for genename in sorted_coverage_depht:
     coverage = coverage_depht[genename][0]
