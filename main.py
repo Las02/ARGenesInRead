@@ -13,8 +13,12 @@ import argparse
 def read_fasta(filename):
     '''Reading in several fasta files'''
 
+    
+    try: file = open(filename, 'r')
+    except FileNotFoundError as errormessage:
+        sys.exit(f"The file '{filename}' could not be found, error: {errormessage}")
+
     oldheader = None
-    file = open(filename, 'r')
     for line in file:
         line = line.strip()
         if line.startswith(">"):    #if line is header
@@ -33,18 +37,23 @@ def read_fasta(filename):
 def read_qfasta(filename):
     '''Extract the dna from a gzippedfastaQ file '''
 
-    sample_file = gzip.open(filename, "r")
+    try: sample_file = gzip.open(filename, "r")
+    except FileNotFoundError as errormessage:
+        sys.exit(f"The file '{filename}' could not be found, error: {errormessage}")
 
     last_line = ""
-    for line in sample_file:
-        line = line.decode("utf-8")
+    try:
+        for line in sample_file:
+            line = line.decode("utf-8")
 
-        # Extracting the dna
-        if last_line.startswith("@"):
-            dna = line.strip()
-            yield dna
+            # Extracting the dna
+            if last_line.startswith("@"):
+                dna = line.strip()
+                yield dna
 
-        last_line = line
+            last_line = line
+    except gzip.BadGzipFile as errormessage:
+        sys.exit(f"The file '{filename}' could not be gzipped, error: {errormessage}")
 
     sample_file.close()
 
@@ -75,8 +84,8 @@ def read_is_valid(gene, read):
     '''
     # Various parameters
     max_space = 1   # The maximum space in the read covering the gene
-    side_bonus = int(0.5 * len(read))   # How much of the read can be outside the gene
-    threshold_score = int(0.5 *len(read))   #The percent of the read which needs to cover the gene
+    side_bonus = int(0.7 * len(read))   # How much of the read can be outside the gene
+    threshold_score = int(0.9 *len(read))   #The percent of the read which needs to cover the gene
 
     # Various init
     maxcount = 0
@@ -157,14 +166,14 @@ for dna, header in read_fasta(args.gene_filename):
         else:
             kmer2gene2kmerpos[kmer] = {header : (kmer_pos_in_gene, len(dna))}
 
-### Reading in the fastaq file and ----
-Could_be_kmers = dict()
-gene_count = dict()
+### Reading in the fastaq file, for each read evaluate if read is valid.
+### If valid, add it to total depht for each gene
+TOTALgene2depht_count = dict()
 for dna_read in read_qfasta(read_filename):
     (kmer_list, _) = find_all_kmers(dna_read, args.kmer_length)
 
     # Save the depht for all found kmers in the read in "gene2depht_count"
-    gene2depht_count = dict()
+    READgene2depht_count = dict()
     for kmer in kmer_list:
         # If the kmer is equal to a kmer in the genes
         if kmer in kmer2gene2kmerpos:
@@ -173,44 +182,43 @@ for dna_read in read_qfasta(read_filename):
                 len_gene = kmer2gene2kmerpos[kmer][genename][1]
                 kmer_pos = kmer2gene2kmerpos[kmer][genename][0]
 
-                if genename not in gene2depht_count:
+                if genename not in READgene2depht_count:
                     # Make vector of [0] to represent depht of each nt corresponding to length of gene
-                    gene2depht_count[genename] = [0] * len_gene
+                    READgene2depht_count[genename] = [0] * len_gene
 
                 # Add depht to it, corresponding the kmer found
                 for i in range(kmer_pos, kmer_pos + kmer_length):
-                    gene2depht_count[genename][i] = 1
+                    READgene2depht_count[genename][i] = 1
 
-    # If the read is valid, add it to the depht count
-    for genename, gene in gene2depht_count.items():
-        if read_is_valid(gene, dna):
-            # Add den til final count
-            if genename in gene_count:
+    # If the read is valid, Add the gene to the final depht_count for each gene (FINALgene2depht_count)
+    for genename, depht_count in READgene2depht_count.items():
+        if read_is_valid(depht_count, dna_read):
+            if genename in TOTALgene2depht_count:
                 # elementwise addition
-                for i in range(len(gene_count[genename])):
-                    gene_count[genename][i] += gene[i]     
+                for i in range(len(TOTALgene2depht_count[genename])):
+                    TOTALgene2depht_count[genename][i] += depht_count[i]     
             else :
-                gene_count[genename] = gene
+                TOTALgene2depht_count[genename] = depht_count
 
-
-
-###################################################################
-print(gene_count)   # adder ikke kestra på
-# Find the actual gene coverage
-coverage_depht = dict()
-for genename, dna in gene_count.items():
+### Picking genes with enough coverage and printing them out
+# Add genes with coverage and avg_depht above threshold values to gene2coverage_depht
+gene2coverage_depht = dict()
+for genename, dna in TOTALgene2depht_count.items():
     (coverage, avg_depht, min_depht) = coverage_stats(dna)
     if coverage > 0.95 and avg_depht > 10:
-        coverage_depht[genename] = (coverage, avg_depht)
-        #hvis der ikke er nogen
+        gene2coverage_depht[genename] = (coverage, avg_depht)
 
-sorted_coverage_depht = sorted(coverage_depht, key= coverage_depht.get, reverse = True)
+# sort the genes based on coverage then depht
+sorted_gene_coverage_depht = sorted(
+            gene2coverage_depht, 
+            key= gene2coverage_depht.get, 
+            reverse = True)
 
-for genename in sorted_coverage_depht:
-    coverage = coverage_depht[genename][0]
-    avg_depht = coverage_depht[genename][1]
-    (name,AR) = genename.split(maxsplit = 1)
-    print("Gene name:", name[1:])
-    print("Antibiotic restistance gene:", AR)
-    print("Coverage:",  coverage*100,"%")
-    print("Average depht:",avg_depht)
+# output and format sorted_gene_coverage_depht to .tsv
+print("gene\tresistence\tcoverage\tavg_depht")
+for genename in sorted_gene_coverage_depht:
+    coverage = gene2coverage_depht[genename][0]
+    avg_depht = gene2coverage_depht[genename][1]
+    (gene,resistence) = genename.split(maxsplit = 1)
+    gene = gene[1:]
+    print(f"{gene}\t{resistence}\t{coverage}\t{avg_depht}\t")
