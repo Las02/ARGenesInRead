@@ -1,24 +1,34 @@
 import sys
 import re
 import gzip
+import argparse
+
+#gene_filename = 'ARsmall.txt'
+#read_filename = "smallfastaseq.txt.gz"
+#gene_filename = 'resistance_genes.fsa'
+#read_filename = "Unknown3_raw_reads_1.txt.gz"
+#read_filename ="mini.txt.gz"
+
+
 def read_fasta(filename):
-    ## Reading in the Antibiotic Resistence (AR) File 
-    AR_file = open(filename, 'r')
-    line = 'void'
-    while line != '' and not line.startswith('>'):
-        line = AR_file.readline()
+    '''Reading in several fasta files'''
 
-    while line != '':
+    oldheader = None
+    file = open(filename, 'r')
+    for line in file:
         line = line.strip()
-        header = line
-        dna = ''
-        line = AR_file.readline()
-        while line != "" and line[0] != '>':
-
+        if line.startswith(">"):    #if line is header
+            newheader = line
+            # if not the first line
+            if oldheader is not None:
+                yield dna, oldheader
+            dna = ""
+            oldheader = newheader
+        else:
             dna += line
-            line = AR_file.readline()
-        yield dna, header
-    AR_file.close()
+    # To yield the last fastaformatted dna
+    yield dna, oldheader
+    file.close()
     
 def read_qfasta(filename):
     '''Extract the dna from a gzippedfastaQ file '''
@@ -60,7 +70,7 @@ def FindKmer(dna, kmer_len):
 
 def add_depht(kmer, gene_data, found_kmer_in_gene,kmer_length):
     '''if input kmer is equal to kmer in gene_data 
-       add depht to it if it exists else make it'''
+       add depht to it if it does not exist make it'''
 
     # If the kmer is equal to a kmer in the genes
     if kmer in gene_data:
@@ -91,20 +101,27 @@ def AddToDatastructure(gene_data, kmer_list, header, range_list):
             gene_data[kmer] = {header:kmer_range}
    
 def judge(gene, read):
+    '''
+    return True if the read is covering enough of the gene,
+    else returns False
+    '''
+    # Various parameters
+    max_space = 1   # The maximum space in the read covering the gene
+    side_bonus = int(0.5 * len(read))   # How much of the read can be outside the gene
+    threshold_score = int(0.5 *len(read))   #The percent of the read which needs to cover the gene
 
-    max_space = 1
-    side_bonus = int(0.5 * len(read))
-    threshold_score = int(0.5 *len(read))
-
+    # Various init
     maxcount = 0
     count = 0
     exitcount = 0
     in_kmer = False
     len_dna = len(gene)
 
+    # Score the reads coverage of the gene
     for pos,value in enumerate(gene):
-        if value == 1: in_kmer = True
 
+        # Start counting the coverage at first [1] in gene
+        if value == 1: in_kmer = True
         if in_kmer:
             if value == 0:
                 exitcount += 1
@@ -114,9 +131,11 @@ def judge(gene, read):
                 if pos in [0, len_dna-1]:
                     count += side_bonus
 
+            # If a better fitting coverage of the read to the gene is found, use it
             if count > maxcount:
                 maxcount = count
             
+            # Stop counting the coverage if there is too much spacing
             if exitcount >= max_space:
                 count = 0
                 exitcount = 0
@@ -124,17 +143,44 @@ def judge(gene, read):
     
     return maxcount >= threshold_score   
 
-#gene_filename = 'ARsmall.txt'
-#read_filename = "smallfastaseq.txt.gz"
-gene_filename = 'resistance_genes.fsa'
-read_filename = "Unknown3_raw_reads_1.txt.gz"
-#read_filename ="mini.txt.gz"
+def coverage_stats(dna):
+    '''from depht array return coverage, avg depht and min_depht'''
 
-# Set the kmer lenght to look for
-kmer_length = 19
+    # Init
+    count = 0
+    total_depht = 0
+    min_depth = 99999
 
-# Stores {Kmer: {"AR":kmer_range}}, The Kmer as key. 
-#then there is a inner dict with the AR gene as key and the kmer_ range as values
+    # Find total_depht, coverage and avg_depht
+    for base in dna:
+        total_depht += base
+        if base != 0:
+            count += 1
+        if base < min_depth:
+            min_depth = base
+    coverage = count / len(dna)
+    avg_depht = total_depht / len(dna)
+    return coverage, avg_depht, min_depth
+
+# Setting up the parser for the program
+parser = argparse.ArgumentParser(
+    prog = "coverage_counter",
+    description =  """
+    Compares genes given in fasta format to reads in fastaQ format
+    returns the genes with best coverage and high enough depht
+    """
+    )
+# Adding arguments to the parser and defining them in the program
+parser.add_argument("-g", dest ="gene_filename", type=str)
+parser.add_argument("-r", dest ="read_filename", type=str)
+parser.add_argument("-k", dest = "kmer_length", type=int, default = 19)
+args = parser.parse_args()
+gene_filename = args.gene_filename
+read_filename = args.read_filename
+kmer_length = args.kmer_length
+
+
+# Stores {Kmer: {"gene":kmer_range}}
 gene_data = dict()
 Could_be_kmers = dict()
 
@@ -149,7 +195,7 @@ for dna, header in read_fasta(gene_filename):
 gene_count = dict()
 
 for dna in read_qfasta(read_filename):
-    # Find all posible kmers
+    # Find all posible kmers and their postitons
     (kmer_list, range_list) = FindKmer(dna, kmer_length)
 
     # Save the depht for all kmers in "found_kmer_in_gene"
@@ -162,26 +208,12 @@ for dna in read_qfasta(read_filename):
         if judge(gene, dna):
             # Add den til final count
             if genename in gene_count:
+                # elementwise addition
                 for i in range(len(gene_count[genename])):
-                    gene_count[genename][i] += gene[i]    # Skal plusse element pr element  
+                    gene_count[genename][i] += gene[i]     
             else :
                 gene_count[genename] = gene 
 
-
-def coverage_stats(dna):
-    '''from depht array get return coverage, avg depht and min_depht'''
-    count = 0
-    total_depht = 0
-    min_depth = 99999
-    for base in dna:
-        total_depht += base
-        if base != 0:
-            count += 1
-        if base < min_depth:
-            min_depth = base
-    coverage = count / len(dna)
-    avg_depht = total_depht / len(dna)
-    return coverage, avg_depht, min_depth
 
 print(gene_count)   # adder ikke kestra på
 # Find the actual gene coverage

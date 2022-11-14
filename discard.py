@@ -1,20 +1,21 @@
 def read_fasta(filename):
     ## Reading in the Antibiotic Resistence (AR) File 
-    AR_file = open(filename, 'r')
-    dna =""
 
-    for line in AR_file:
-        if line[0] == ">":
-            header = line
+    oldheader = None
+    file = open(filename, 'r')
+    for line in file:
+        line = line.strip()
+        if line.startswith(">"):
+            newheader = line
+            if oldheader is not None:
+                yield dna, oldheader
             dna = ""
-            print(header)
+            oldheader = newheader
         else:
-            dna += line[:-1]
-            if line == header:
-                break
-        print(dna)
+            dna += line
+    yield dna, oldheader
 
 
-
-    return dna
-print(read_fasta("ARsmall.txt"))
+for dna, header in read_fasta("ARsmall.txt"):
+    print(header,dna)
+    
