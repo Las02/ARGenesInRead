@@ -48,7 +48,7 @@ def read_qfasta(filename):
 
     sample_file.close()
 
-def FindKmer(dna, kmer_len):
+def find_all_kmers(dna, kmer_len):
     '''Find Kmers from dna string and return list with them
        in additon to list with their positions'''
 
@@ -64,43 +64,11 @@ def FindKmer(dna, kmer_len):
 
         kmer = dna[i: i + kmer_len]
         kmer_list.append(kmer)
-        range_list.append([i, len(dna)])
+        range_list.append(i)
 
     return kmer_list, range_list
 
-def add_depht(kmer, gene_data, found_kmer_in_gene,kmer_length):
-    '''if input kmer is equal to kmer in gene_data 
-       add depht to it if it does not exist make it'''
-
-    # If the kmer is equal to a kmer in the genes
-    if kmer in gene_data:
-        # Go through each gene which has the kmer and add depht to it.
-        for genename in gene_data[kmer]:
-            len_gene = gene_data[kmer][genename][1]
-            kmer_pos = gene_data[kmer][genename][0]
-
-            if genename not in found_kmer_in_gene:
-                # Make vector of [0] to represent depht of each nt corresponding to length of gene
-                found_kmer_in_gene[genename] = [0] * len_gene
-
-            # Add depht to it, corresponding the kmer found
-            for i in range(kmer_pos, kmer_pos + kmer_length):
-                found_kmer_in_gene[genename][i] = 1
-
-def AddToDatastructure(gene_data, kmer_list, header, range_list):
-    """Adds the kmer_list and header to the gene_data """
-    for i in range(len(kmer_list)):
-        kmer = kmer_list[i]
-        kmer_range = range_list[i]
-
-        # If the kmer is allready assigned to an AR gene, add the additional
-        if kmer in gene_data:
-            gene_data[kmer][header] = (kmer_range)
-        # Else add the kmer to the datastructure
-        else:
-            gene_data[kmer] = {header:kmer_range}
-
-def judge(gene, read):
+def read_is_valid(gene, read):
     '''
     return True if the read is covering enough of the gene,
     else returns False
@@ -162,7 +130,7 @@ def coverage_stats(dna):
     avg_depht = total_depht / len(dna)
     return coverage, avg_depht, min_depth
 
-# Setting up the parser for the program
+### Setting up the parser for the program
 parser = argparse.ArgumentParser(
     prog = "coverage_counter",
     description =  """
@@ -175,36 +143,47 @@ parser.add_argument("-g", dest ="gene_filename", type=str)
 parser.add_argument("-r", dest ="read_filename", type=str)
 parser.add_argument("-k", dest = "kmer_length", type=int, default = 19)
 args = parser.parse_args()
-gene_filename = args.gene_filename
 read_filename = args.read_filename
 kmer_length = args.kmer_length
 
+### Reading in the genefile and saving it in the datastructure: gene_data
+kmer2gene2kmerpos = dict()
+for dna, header in read_fasta(args.gene_filename):
+    (kmer_list, kmer_positions) = find_all_kmers(dna, args.kmer_length)
+    # Make gene_data datastructure which consists of: {Kmer: {"gene_name":(kmer_position_in_gene,length_gene)}}
+    for kmer, kmer_pos_in_gene in zip(kmer_list, kmer_positions):
+        if kmer in kmer2gene2kmerpos:
+            kmer2gene2kmerpos[kmer][header] = (kmer_pos_in_gene, len(dna))
+        else:
+            kmer2gene2kmerpos[kmer] = {header : (kmer_pos_in_gene, len(dna))}
 
-# Stores {Kmer: {"gene":kmer_range}}
-gene_data = dict()
+### Reading in the fastaq file and ----
 Could_be_kmers = dict()
-
-for dna, header in read_fasta(gene_filename):
-    # Finding all the posible kmers and its positions
-    (kmer_list, range_list) = FindKmer(dna, kmer_length)
-
-    # Adding the kmer_list and header to the gene_data
-    AddToDatastructure(gene_data, kmer_list, header, range_list)
-
 gene_count = dict()
+for dna_read in read_qfasta(read_filename):
+    (kmer_list, _) = find_all_kmers(dna_read, args.kmer_length)
 
-for dna in read_qfasta(read_filename):
-    # Find all posible kmers and their postitons
-    (kmer_list, range_list) = FindKmer(dna, kmer_length)
-
-    # Save the depht for all kmers in "found_kmer_in_gene"
-    found_kmer_in_gene = dict()
+    # Save the depht for all found kmers in the read in "gene2depht_count"
+    gene2depht_count = dict()
     for kmer in kmer_list:
-        add_depht(kmer, gene_data, found_kmer_in_gene, kmer_length)
+        # If the kmer is equal to a kmer in the genes
+        if kmer in kmer2gene2kmerpos:
+            # Go through each gene which has the kmer and add depht to it.
+            for genename in kmer2gene2kmerpos[kmer]:
+                len_gene = kmer2gene2kmerpos[kmer][genename][1]
+                kmer_pos = kmer2gene2kmerpos[kmer][genename][0]
 
-    # Do some check with it
-    for genename, gene in found_kmer_in_gene.items():
-        if judge(gene, dna):
+                if genename not in gene2depht_count:
+                    # Make vector of [0] to represent depht of each nt corresponding to length of gene
+                    gene2depht_count[genename] = [0] * len_gene
+
+                # Add depht to it, corresponding the kmer found
+                for i in range(kmer_pos, kmer_pos + kmer_length):
+                    gene2depht_count[genename][i] = 1
+
+    # If the read is valid, add it to the depht count
+    for genename, gene in gene2depht_count.items():
+        if read_is_valid(gene, dna):
             # Add den til final count
             if genename in gene_count:
                 # elementwise addition
@@ -214,21 +193,8 @@ for dna in read_qfasta(read_filename):
                 gene_count[genename] = gene
 
 
-def coverage_stats(dna):
-    '''from depht array get return coverage, avg depht and min_depht'''
-    count = 0
-    total_depht = 0
-    min_depth = 99999
-    for base in dna:
-        total_depht += base
-        if base != 0:
-            count += 1
-        if base < min_depth:
-            min_depth = base
-    coverage = count / len(dna)
-    avg_depht = total_depht / len(dna)
-    return coverage, avg_depht, min_depth
 
+###################################################################
 print(gene_count)   # adder ikke kestra på
 # Find the actual gene coverage
 coverage_depht = dict()
