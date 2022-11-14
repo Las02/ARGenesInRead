@@ -131,12 +131,13 @@ read_filename = "Unknown3_raw_reads_1.txt.gz"
 #read_filename ="mini.txt.gz"
 
 # Set the kmer lenght to look for
-kmer_length = 15
+kmer_length = 19
 
 # Stores {Kmer: {"AR":kmer_range}}, The Kmer as key. 
 #then there is a inner dict with the AR gene as key and the kmer_ range as values
 gene_data = dict()
 Could_be_kmers = dict()
+
 
 for dna, header in read_fasta(gene_filename):
     # Finding all the posible kmers and its positions
