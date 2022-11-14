@@ -124,6 +124,22 @@ def judge(gene, read):
 
     return maxcount >= threshold_score
 
+def coverage_stats(dna):
+    '''from depht array get return coverage, avg depht and min_depht'''
+    count = 0
+    total_depht = 0
+    min_depth = 99999
+    for base in dna:
+        total_depht += base
+        if base != 0:
+            count += 1
+        if base < min_depth:
+            min_depth = base
+    coverage = count / len(dna)
+    avg_depht = total_depht / len(dna)
+    return coverage, avg_depht, min_depth
+
+'''Filenames'''
 #gene_filename = 'ARsmall.txt'
 #read_filename = "smallfastaseq.txt.gz"
 gene_filename = 'resistance_genes.fsa'
@@ -137,7 +153,6 @@ kmer_length = 19
 #then there is a inner dict with the AR gene as key and the kmer_ range as values
 gene_data = dict()
 Could_be_kmers = dict()
-
 
 for dna, header in read_fasta(gene_filename):
     # Finding all the posible kmers and its positions
@@ -163,33 +178,21 @@ for dna in read_qfasta(read_filename):
             # Add den til final count
             if genename in gene_count:
                 for i in range(len(gene_count[genename])):
-                    gene_count[genename][i] += gene[i]    # Skal plusse element pr element
+                    gene_count[genename][i] += gene[i]    # TODO Skal plusse element pr element
             else :
                 gene_count[genename] = gene
 
 
-def coverage_stats(dna):
-    '''from depht array get return coverage, avg depht and min_depht'''
-    count = 0
-    total_depht = 0
-    min_depth = 99999
-    for base in dna:
-        total_depht += base
-        if base != 0:
-            count += 1
-        if base < min_depth:
-            min_depth = base
-    coverage = count / len(dna)
-    avg_depht = total_depht / len(dna)
-    return coverage, avg_depht, min_depth
 
-print(gene_count)   # adder ikke kestra på
+
+#print(gene_count)   #TODO adder ikke kestra på
 # Find the actual gene coverage
 coverage_depht = dict()
 for genename, dna in gene_count.items():
     (coverage, avg_depht, min_depht) = coverage_stats(dna)
-    if coverage > 0.9 and avg_depht > 0.5:
+    if coverage > 0.95 and avg_depht > 10:
         coverage_depht[genename] = (coverage, avg_depht)
+        #hvis der ikke er nogen
 
 sorted_coverage_depht = sorted(coverage_depht, key= coverage_depht.get, reverse = True)
 
@@ -200,4 +203,4 @@ for genename in sorted_coverage_depht:
     print("Gene name:", name[1:])
     print("Antibiotic restistance gene:", AR)
     print("Coverage:",  coverage*100,"%")
-    print("Average_depht: ",avg_depht)
+    print("Average depht:",avg_depht)
