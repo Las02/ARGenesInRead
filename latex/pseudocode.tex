@@ -1,0 +1,66 @@
+
+
+
+
+Before the main part of the program the file with antibiotic resistence genes are read in an saved in the datastructure kmer2gene2kmerpos.
+kmer2gene2kmerpos consists of {Kmer: {"gene_name":(kmer_position_in_gene,length_gene)}}.
+If there is more than one gene_name to a kmer, then the additional are also added.
+The following pseudocode is meant to explain the logic of the main part of the program, which works with
+the read file.
+
+\begin{verbatim}
+
+for dna_read in read_qfasta(read_filename):
+    kmer_list = find_all_kmers(dna_read, kmer_length)
+    for kmer in kmer_list:
+        for each genename in which the read kmer is equal to a kmer in the genes:
+            Save it in READgene2depht_count; the key is the found genename,
+            the value is a list of ints corresponding to the depht of each nt in the gene
+
+    for genename, depht_count in READgene2depht
+        if read_is_valid(depht_count, dna_read):
+            Add the found depht of the read (stored in READgene2depht_count)
+            to the TOTALgene2depht_count which stores the total ge
+
+
+### Picking genes with enough coverage and printing them out
+# Add genes with coverage and avg_depht above threshold values to gene2coverage_depht
+gene2coverage_depht = dict()
+for genename, dna in TOTALgene2depht_count.items():
+    (coverage, avg_depht, min_depht) = coverage_stats(dna)
+    if coverage > 0.95 and avg_depht > 10:
+        gene2coverage_depht[genename] = (coverage, avg_depht)
+
+# sort the genes based on coverage then depht
+# O(nlogn) where n is the found genes
+sorted_gene_coverage_depht = sorted(
+            gene2coverage_depht, 
+            key= gene2coverage_depht.get, 
+            reverse = True)
+
+# output and format sorted_gene_coverage_depht to .tsv
+print("gene\tresistence\tcoverage\tavg_depht")
+for genename in sorted_gene_coverage_depht:
+    coverage = gene2coverage_depht[genename][0]
+    avg_depht = gene2coverage_depht[genename][1]
+    (gene,resistence) = genename.split(maxsplit = 1)
+    gene = gene[1:]
+    print(f"{gene}\t{resistence}\t{coverage}\t{avg_depht}\t")
+
+
+    # about 8 have full coverage of the genes. m. 100% coverage
+    """
+    gene    resistence      coverage        avg_depht
+catB4_1_EU935739        Phenicol resistance:    1.0     21.7103825136612
+tet(A)_4_AJ517790       Tetracycline resistance:        1.0     11.7325
+aac(6')Ib-cr_1_DQ303918 Fluoroquinolone and aminoglycoside resistance:  1.0    11.438333333333333
+blaSHV-28_1_HM751101    Beta-lactam resistance: 1.0     10.641114982578397
+oqxA_1_EU370913 Quinolone resistance:   0.9821428571428571      10.073979591836734
+fosA_3_ACWO01000079     Fosfomycin resistance:  0.9809523809523809      19.20952380952381
+blaSHV-28_2_EU441172    Beta-lactam resistance: 0.9639953542392566      10.529616724738675
+    """
+
+
+
+ 
+\end{verbatim}
