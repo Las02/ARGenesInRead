@@ -1,3 +1,6 @@
+
+
+#!!! ændre lige her
 import sys
 import re
 import gzip
@@ -59,7 +62,9 @@ def read_qfasta(filename):
 
 def find_all_kmers(dna, kmer_len):
     '''Find Kmers from dna string and return list with them
-       in additon to list with their positions'''
+       in additon to list with their positions
+       Running time: O(len(dna))
+       '''
 
     # Return None if there is no possible kmer's
     if kmer_len > len(dna):
@@ -81,11 +86,12 @@ def read_is_valid(gene, read):
     '''
     return True if the read is covering enough of the gene,
     else returns False
+    Running time: O(len(gene))
     '''
     # Various parameters
     max_space = 1   # The maximum space in the read covering the gene
-    side_bonus = int(0.7 * len(read))   # How much of the read can be outside the gene
-    threshold_score = int(0.9 *len(read))   #The percent of the read which needs to cover the gene
+    side_bonus = int(0.70 * len(read))   # How much of the read can be outside the gene
+    threshold_score = int(0.95 *len(read))   #The percent of the read which needs to cover the gene
 
     # Various init
     maxcount = 0
@@ -121,7 +127,9 @@ def read_is_valid(gene, read):
     return maxcount >= threshold_score
 
 def coverage_stats(dna):
-    '''from depht array return coverage, avg depht and min_depht'''
+    '''from depht array return coverage, avg depht and min_depht
+        Running time: O(len(dna))
+    '''
 
     # Init
     count = 0
@@ -139,6 +147,21 @@ def coverage_stats(dna):
     avg_depht = total_depht / len(dna)
     return coverage, avg_depht, min_depth
 
+def ComplementDNA(dna):
+    '''Return the complement dna string'''
+
+    # Returns None if not string
+    if not isinstance(dna, str):
+        raise ValueError
+
+    # Complement the dna
+    trans = str.maketrans("ACTG","TGAC")
+    dna_trans = dna.translate(trans)
+
+    # Return the string reversed
+    return dna_trans[::-1]  
+
+
 ### Setting up the parser for the program
 parser = argparse.ArgumentParser(
     prog = "coverage_counter",
@@ -155,24 +178,39 @@ args = parser.parse_args()
 read_filename = args.read_filename
 kmer_length = args.kmer_length
 
-### Reading in the genefile and saving it in the datastructure: gene_data
+### Read in the file with the antibiotic resistence genes and save it in the datastructure kmer2gene2kmerpos
 kmer2gene2kmerpos = dict()
-for dna, header in read_fasta(args.gene_filename):
-    (kmer_list, kmer_positions) = find_all_kmers(dna, args.kmer_length)
-    # Make gene_data datastructure which consists of: {Kmer: {"gene_name":(kmer_position_in_gene,length_gene)}}
-    for kmer, kmer_pos_in_gene in zip(kmer_list, kmer_positions):
-        if kmer in kmer2gene2kmerpos:
-            kmer2gene2kmerpos[kmer][header] = (kmer_pos_in_gene, len(dna))
-        else:
-            kmer2gene2kmerpos[kmer] = {header : (kmer_pos_in_gene, len(dna))}
+for non_complement_dna, header in read_fasta(args.gene_filename):
+
+    complement_dna = ComplementDNA(non_complement_dna)
+
+    for dna in [non_complement_dna, complement_dna]:
+        (kmer_list, kmer_positions) = find_all_kmers(dna, args.kmer_length)
+        # Make gene_data datastructure which consists of: {Kmer: {"gene_name":(kmer_position_in_gene,length_gene)}}
+        for kmer, kmer_pos_in_gene in zip(kmer_list, kmer_positions):
+            if kmer in kmer2gene2kmerpos:
+                kmer2gene2kmerpos[kmer][header] = (kmer_pos_in_gene, len(dna))
+            else:
+                kmer2gene2kmerpos[kmer] = {header : (kmer_pos_in_gene, len(dna))}
 
 ### Reading in the fastaq file, for each read evaluate if read is valid.
 ### If valid, add it to total depht for each gene
 TOTALgene2depht_count = dict()
+# The second part takes the longest: O(avg_dna_Read*avg_dna_len*number_of_genes)
+# And we run it for each read so O(n_reads*(avg_dna_Read*avg_dna_len*number_of_genes))
+# In most cases avg_dna_Read*avg_dna_len are going to be constants => O(n_reads*number_of_genes)
+# And often the avg number of found genes is also going to be a constant. meaning O(n_reads) since the genes are stored in a dict
+seen_gene = {}
 for dna_read in read_qfasta(read_filename):
+
+    # O(len(dna_read))
     (kmer_list, _) = find_all_kmers(dna_read, args.kmer_length)
 
     # Save the depht for all found kmers in the read in "gene2depht_count"
+    # Running time: O(avg_dna_Read*avg_dna_len*number_of_genes)
+    # Kmer_list amount is equal to len(dna_read) => avg_dna_read
+    # Worst case is kmer found in all => number_of_genes
+    # Making the new genedepht counter => avg_dna_len
     READgene2depht_count = dict()
     for kmer in kmer_list:
         # If the kmer is equal to a kmer in the genes
@@ -189,26 +227,31 @@ for dna_read in read_qfasta(read_filename):
                 # Add depht to it, corresponding the kmer found
                 for i in range(kmer_pos, kmer_pos + kmer_length):
                     READgene2depht_count[genename][i] = 1
-
+    
     # If the read is valid, Add the gene to the final depht_count for each gene (FINALgene2depht_count)
+    # O(avg_dna_Read*avg_dna_len)
+    # avg_dna_read because we have that amount of kmers
+    # avg_dna_len because we go through the entire gene both for elementwise addition af for read_is_valid
     for genename, depht_count in READgene2depht_count.items():
         if read_is_valid(depht_count, dna_read):
             if genename in TOTALgene2depht_count:
                 # elementwise addition
                 for i in range(len(TOTALgene2depht_count[genename])):
-                    TOTALgene2depht_count[genename][i] += depht_count[i]     
+                    TOTALgene2depht_count[genename][i] += depht_count[i]    
+                seen_gene[genename] += 1 
             else :
                 TOTALgene2depht_count[genename] = depht_count
-
+                seen_gene[genename] = 1
 ### Picking genes with enough coverage and printing them out
 # Add genes with coverage and avg_depht above threshold values to gene2coverage_depht
 gene2coverage_depht = dict()
 for genename, dna in TOTALgene2depht_count.items():
     (coverage, avg_depht, min_depht) = coverage_stats(dna)
-    if coverage > 0.95 and avg_depht > 10:
+    if coverage > 0.95 and min_depht > 10:
         gene2coverage_depht[genename] = (coverage, avg_depht)
 
 # sort the genes based on coverage then depht
+# O(nlogn) where n is the found genes
 sorted_gene_coverage_depht = sorted(
             gene2coverage_depht, 
             key= gene2coverage_depht.get, 
@@ -221,4 +264,18 @@ for genename in sorted_gene_coverage_depht:
     avg_depht = gene2coverage_depht[genename][1]
     (gene,resistence) = genename.split(maxsplit = 1)
     gene = gene[1:]
-    print(f"{gene}\t{resistence}\t{coverage}\t{avg_depht}\t")
+    seen = seen_gene[genename]
+    print(f"{gene}\t{resistence}\t{coverage}\t{avg_depht}\t{seen}")
+
+
+    # about 8 have full coverage of the genes. m. 100% coverage
+    """
+    gene    resistence      coverage        avg_depht
+catB4_1_EU935739        Phenicol resistance:    1.0     21.7103825136612
+tet(A)_4_AJ517790       Tetracycline resistance:        1.0     11.7325
+aac(6')Ib-cr_1_DQ303918 Fluoroquinolone and aminoglycoside resistance:  1.0    11.438333333333333
+blaSHV-28_1_HM751101    Beta-lactam resistance: 1.0     10.641114982578397
+oqxA_1_EU370913 Quinolone resistance:   0.9821428571428571      10.073979591836734
+fosA_3_ACWO01000079     Fosfomycin resistance:  0.9809523809523809      19.20952380952381
+blaSHV-28_2_EU441172    Beta-lactam resistance: 0.9639953542392566      10.529616724738675
+    """
