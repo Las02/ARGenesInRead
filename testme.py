@@ -1,5 +1,4 @@
-#/usr/bin/env python
-
+#! /usr/bin/env python
 
 import sys
 import gzip
@@ -34,7 +33,7 @@ def argument_parser(argv,kmer_length, gene_file, read_file):
 def read_fasta(filename):
     '''Reading in several fasta files'''
     
-    try: file = open(filename, 'r')
+    try: file = open(filename, "r")
     except FileNotFoundError as errormessage:
         sys.exit(f"The file '{filename}' could not be found, error: {errormessage}")
 
@@ -166,7 +165,7 @@ def coverage_stats(dna):
 
 
 # Setting up the argument parser
-(kmer_length,gene_filename,read_filename) = argument_parser(sys.argv,19,"resistance_genes.fsa.txt","Unknown3_raw_reads_1.txt.gz")
+(kmer_length,gene_filename,read_filename) = argument_parser(sys.argv,19,"resistance_genes.fsa","Unknown3_raw_reads_1.txt.gz")
 
 
 ### Read in the file with the antibiotic resistence genes and save it in the datastructure kmer2gene2kmerpos
@@ -244,4 +243,3 @@ for genename in sorted_gene_coverage_depht:
     gene = gene[1:]
     seen = seen_gene[genename]
     print(f"{gene}\t{resistence}\t{coverage}\t{avg_depht}\t{seen}")
-

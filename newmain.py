@@ -1,4 +1,3 @@
-#/usr/bin/env python
 
 
 import sys
@@ -34,7 +33,7 @@ def argument_parser(argv,kmer_length, gene_file, read_file):
 def read_fasta(filename):
     '''Reading in several fasta files'''
     
-    try: file = open(filename, 'r')
+    try: file = open(filename, "r")
     except FileNotFoundError as errormessage:
         sys.exit(f"The file '{filename}' could not be found, error: {errormessage}")
 
