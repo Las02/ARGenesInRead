@@ -165,7 +165,7 @@ def coverage_stats(dna):
 
 
 # Setting up the argument parser
-(kmer_length,gene_filename,read_filename) = argument_parser(sys.argv,19,"resistance_genes.fsa.txt","Unknown3_raw_reads_1.txt.gz")
+(kmer_length,gene_filename,read_filename) = argument_parser(sys.argv,19,"resistance_genes.fsa","Unknown3_raw_reads_1.txt.gz")
 
 
 ### Read in the file with the antibiotic resistence genes and save it in the datastructure kmer2gene2kmerpos
