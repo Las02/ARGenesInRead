@@ -1,18 +1,21 @@
 #! /usr/bin/env python
-
 import sys
 import gzip
 
 def argument_parser(argv,kmer_length, gene_file, read_file):
-
+    """
+    Sets up a argument parser from the argv vector. 
+    In addition takes in default values for variables, if not given 
+    arguments in argv
+    """
     last_arg = ""
-
-    # Go throug argv. If the last argument was a "-" argument, save the argument in correct variable
+    # Go throug argv. If the last argument was a "-" argument (eg -k), save the argument in correct variable
     for arg in argv:
-
         # Exit if missing an argument
         if last_arg.startswith("-") and arg.startswith("-"):
             sys.exit(f"Missing argument in {last_arg}")
+        elif arg.startswith("-") and argv[-1] == arg:
+            sys.exit(f"Missing argument in {arg}")
 
         elif last_arg == "-k":
             try:
@@ -31,31 +34,34 @@ def argument_parser(argv,kmer_length, gene_file, read_file):
     return (kmer_length, gene_file, read_file)
 
 def read_fasta(filename):
-    '''Reading in several fasta files'''
-    
+    '''Reading in several fasta files
+       yield each pair of header and dna seperate
+    '''
+    # Try to open the file, error if file does not exsist
     try: file = open(filename, "r")
     except FileNotFoundError as errormessage:
         sys.exit(f"The file '{filename}' could not be found, error: {errormessage}")
 
-    oldheader = None
+    # Extract the dna, and the headers.
+    oldheader = "firstheader"
     for line in file:
         line = line.strip()
-        if line.startswith(">"):    #if line is header
+        #if line is header yield dna and header except first header
+        if line.startswith(">"):    
             newheader = line
-            # if not the first line
-            if oldheader is not None:
+            if oldheader != "firstheader":
                 yield dna, oldheader
             dna = ""
             oldheader = newheader
         else:
             dna += line
-    # To yield the last fastaformatted dna
+    # Yield the last header and dna
     yield dna, oldheader
     file.close()
     
 def read_qfasta(filename):
-    '''Extract the dna from a gzippedfastaQ file '''
-
+    '''Extract dna from a gzipped fastaQ file '''
+    # Try to open the file, error if file does not exsist
     try: sample_file = gzip.open(filename, "r")
     except FileNotFoundError as errormessage:
         sys.exit(f"The file '{filename}' could not be found, error: {errormessage}")
@@ -71,15 +77,16 @@ def read_qfasta(filename):
                 yield dna
 
             last_line = line
+    
+    # Error message if the gzipped file does not work
     except gzip.BadGzipFile as errormessage:
         sys.exit(f"The file '{filename}' could not be gzipped, error: {errormessage}")
 
     sample_file.close()
 
 def find_all_kmers(dna, kmer_len):
-    '''Find Kmers from dna string and return list with them
+    '''Find Kmers from a dna string and return list with them
        in additon to list with their positions
-       Running time: O(len(dna))
        '''
 
     # Return None if there is no possible kmer's
@@ -174,8 +181,8 @@ trans = str.maketrans("ACTG","TGAC")
 for non_complement_dna, header in read_fasta(gene_filename):
 
     # MÅSKE OGSÅ SKAL VÆRE DEN ANDEN VEJ?
-    complement_dna= non_complement_dna.translate(trans)[::-1] 
-    for dna in [non_complement_dna, complement_dna]:
+    complement_dna= non_complement_dna.translate(trans)
+    for dna in [non_complement_dna, complement_dna,non_complement_dna[::-1], complement_dna[::-1]]:
         (kmer_list, kmer_positions) = find_all_kmers(dna, kmer_length)
         # Make gene_data datastructure which consists of: {Kmer: {"gene_name":(kmer_position_in_gene,length_gene)}}
         for kmer, kmer_pos_in_gene in zip(kmer_list, kmer_positions):
@@ -187,7 +194,6 @@ for non_complement_dna, header in read_fasta(gene_filename):
 ### Reading in the fastaq file, for each read evaluate if read is valid.
 ### If valid, add it to total depht for each gene
 TOTALgene2depht_count = dict()
-seen_gene = {}
 for dna_read in read_qfasta(read_filename):
 
     (kmer_list, _) = find_all_kmers(dna_read, kmer_length)
@@ -216,10 +222,10 @@ for dna_read in read_qfasta(read_filename):
                 # elementwise addition
                 for i in range(len(TOTALgene2depht_count[genename])):
                     TOTALgene2depht_count[genename][i] += depht_count[i]    
-                seen_gene[genename] += 1 
+
             else :
                 TOTALgene2depht_count[genename] = depht_count
-                seen_gene[genename] = 1
+
 ### Picking genes with enough coverage and printing them out
 # Add genes with coverage and avg_depht above threshold values to gene2coverage_depht
 gene2coverage_depht = dict()
@@ -237,9 +243,8 @@ sorted_gene_coverage_depht = sorted(
 # output and format sorted_gene_coverage_depht to .tsv
 print("gene\tresistence\tcoverage\tavg_depht")
 for genename in sorted_gene_coverage_depht:
-    coverage = gene2coverage_depht[genename][0]
-    avg_depht = gene2coverage_depht[genename][1]
+    coverage = round(gene2coverage_depht[genename][0],2)
+    avg_depht = round(gene2coverage_depht[genename][1],2)
     (gene,resistence) = genename.split(maxsplit = 1)
     gene = gene[1:]
-    seen = seen_gene[genename]
-    print(f"{gene}\t{resistence}\t{coverage}\t{avg_depht}\t{seen}")
+    print(f"{gene}\t{resistence}\t{coverage}\t{avg_depht}")
