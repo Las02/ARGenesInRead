@@ -1,0 +1,10 @@
+gene	resistence	coverage	avg_depht
+fosA_3_ACWO01000079	Fosfomycin resistance:	1.0	40.42
+tet(A)_4_AJ517790	Tetracycline resistance:	1.0	22.1
+aac(6')Ib-cr_1_DQ303918	Fluoroquinolone and aminoglycoside resistance:	1.0	21.93
+blaOXA-1_1_J02967	Beta-lactam resistance:	1.0	20.74
+strB_1_M96392	Aminoglycoside resistance:Alternate name; aph(6)-Id	1.0	20.07
+blaTEM-1B_1_JF910132	Beta-lactam resistance:Alternate name; RblaTEM-1	1.0	19.44
+strA_4_AF321551	Aminoglycoside resistance:Alternate name; aph(3'')-Ib	1.0	19.15
+strB_3_AF024602	Aminoglycoside resistance:Alternate name; aph(6)-Id	1.0	19.05
+blaTEM-206_1_KC783461	Beta-lactam resistance:	1.0	17.68
