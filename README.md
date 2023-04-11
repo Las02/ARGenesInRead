@@ -1,15 +1,15 @@
 # Goal
-The goal of this project has been to develop a commandline program to find resistance genes in reads from metagenomic samples.
-The program runs without any dependencies apart from base Python3 in O(N) time corresponding to the size of the metagenomic sample
+The goal of this project has been to develop a commandline program to find resistance genes in reads from metagenomic samples.  
+The program runs without any dependencies apart from base Python3 in O(N) time corresponding to the size of the metagenomic sample.  
 
 # How does it work?
-The program makes a database structure which store all k-mers based on a FASTA file of antibiotic resistance genes.
-It then looks at each k-mer from each read in an input FASTAQ file to see if it matches.
-In case of a match the read might be from bacterial dna which has a resistance gene.
-The output of the program is then antibiotic genes with coverage above 95% and a depht above 10.
+The program makes a database structure which store all k-mers based on a FASTA file of antibiotic resistance genes.  
+It then looks at each k-mer from each read in an input FASTAQ file to see if it matches.  
+In case of a match the read might be from bacterial dna which has a resistance gene.  
+The output of the program is then antibiotic genes with coverage above 95% and a depht above 10.  
 
 # Program manual
-The program is named "GenesInRead.py," It takes 3 arguments:
+The program is named "GenesInRead.py," It takes 3 arguments:  
 ```
 -g : a fasta file containg the resistence genes
 -r : a gzipped FASTAQ file containg read data
@@ -19,7 +19,7 @@ The following is an example of using the program:
 ```
 ./GenesInRead.py -g resistance_genes.fsa -r Unknown3_raw_reads_2.txt.gz -k 19
 ```
-The output of the program is printed, and can be used as if it was std.out ,
+The output of the program is printed, and can be used as if it was std.out,
 It is in the format of a tab separated file. Here is an example:
 
 ```
@@ -37,11 +37,11 @@ If the program is not giving any arguments or lacking some it will instead use t
 -r : "resistance_genes.fsa" 
 -k : 19
 ```
-Example files to run the program can be found below:
-Link to "resistance_genes.fsa":
-teaching.healthtech.dtu.dk/material/36610/resistance_genes.fsa
-Link to "Unknown3_raw_reads_1.txt.gz":
-teaching.healthtech.dtu.dk/material/36610/Unknown3_raw_reads_1.txt.gz
+Example files to run the program can be found below:  
+Link to "resistance_genes.fsa":  
+teaching.healthtech.dtu.dk/material/36610/resistance_genes.fsa  
+Link to "Unknown3_raw_reads_1.txt.gz":  
+teaching.healthtech.dtu.dk/material/36610/Unknown3_raw_reads_1.txt.gz   
 
 # Program structure
 The program structure, described in pseudocode can be seen below:
