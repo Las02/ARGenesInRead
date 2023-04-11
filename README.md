@@ -10,33 +10,33 @@ The output of the program is then antibiotic genes with coverage above 95% and a
 
 # Program manual
 The program is named "GenesInRead.py," It takes 3 arguments:
-"""
+```
 -g : a fasta file containg the resistence genes
 -r : a gzipped FASTAQ file containg read data
 -k : an argument giving the kmer size to look for
-"""
+```
 The following is an example of using the program:
-"""
+```
 ./GenesInRead.py -g resistance_genes.fsa -r Unknown3_raw_reads_2.txt.gz -k 19
-""""
+```
 The output of the program is printed, and can be used as if it was std.out ,
 It is in the format of a tab separated file. Here is an example:
 
-"""
+```
     gene    resistence      coverage        avg_depht
 fosA_3_ACWO01000079     Fosfomycin resistance:  1.0     47.15     
 aac(6')Ib-cr_1_DQ303918 Fluoroquinolone and aminoglycoside resistance:  1.0   23.95     
 blaOXA-1_1_J02967       Beta-lactam resistance: 1.0     22.82   
 strB_1_M96392   Aminoglycoside resistance:Alternate name; aph(6)-Id     1.0     22.32     
-"""
+```
 
 If the program is not giving any arguments or lacking some it will instead use the defaults which are:
 
-"""
+```
 -g : "Unknown3_raw_reads_1.txt.gz" 
 -r : "resistance_genes.fsa" 
 -k : 19
-"""
+```
 Example files to run the program can be found below:
 Link to "resistance_genes.fsa":
 teaching.healthtech.dtu.dk/material/36610/resistance_genes.fsa
@@ -45,7 +45,7 @@ teaching.healthtech.dtu.dk/material/36610/Unknown3_raw_reads_1.txt.gz
 
 # Program structure
 The program structure, described in pseudocode can be seen below:
-"""
+```
 Read in the antibiotic genes file:
     for each gene, their complement and their reverse
         Save the kmers, their positions and in which gene they were found
@@ -62,4 +62,4 @@ Read in the fastaQ file:
 Go through each gene
     If its total coverage is above 95 percent and depth above 10
         print it to std.out sorted based on coverage then average depth
-"""
+```
