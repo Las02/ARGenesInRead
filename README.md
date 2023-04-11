@@ -3,9 +3,9 @@ The goal of this project has been to develop a commandline program to find resis
 The program runs without any dependencies apart from base Python3 in O(N) time corresponding to the size of the metagenomic sample.  
 
 # How does it work?
-The program makes a database structure which store all k-mers based on a FASTA file of antibiotic resistance genes.  
-It then looks at each k-mer from each read in an input FASTAQ file to see if it matches.  
-In case of a match the read might be from bacterial dna which has a resistance gene.  
+The program makes a database structure which store all k-mers based on a FASTA file of antibiotic resistance genes.
+It then looks at each k-mer from each read in an input FASTAQ file to see if it matches.
+In case of a match the read might be from bacterial dna which has a resistance gene.
 The output of the program is then antibiotic genes with coverage above 95% and a depht above 10.  
 
 # Program manual
