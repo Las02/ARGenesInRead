@@ -17,7 +17,7 @@ The program is named "ARGenesInRead.py," It takes 3 arguments:
 ```
 The following is an example of using the program:
 ```
-python ./ARGenesInRead.py -g resistance_genes.fsa -r Unknown3_raw_reads_1.txt.gz -k 19
+python ARGenesInRead.py -g resistance_genes.fsa -r Unknown3_raw_reads_1.txt.gz -k 19
 ```
 The output of the program is printed, and can be used as if it was std.out,
 It is in the format of a tab separated file. Here is an example:
