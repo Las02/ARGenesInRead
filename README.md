@@ -9,7 +9,7 @@ In case of a match the read might be from bacterial dna which has a resistance g
 The output of the program is then antibiotic genes with coverage above 95% and a depht above 10.  
 
 # Program manual
-The program is named "GenesInRead.py," It takes 3 arguments:  
+The program is named "ARGenesInRead.py," It takes 3 arguments:  
 ```
 -g : a fasta file containg the resistence genes
 -r : a gzipped FASTAQ file containg read data
@@ -17,7 +17,7 @@ The program is named "GenesInRead.py," It takes 3 arguments:
 ```
 The following is an example of using the program:
 ```
-./GenesInRead.py -g resistance_genes.fsa -r Unknown3_raw_reads_2.txt.gz -k 19
+./ARGenesInRead.py -g resistance_genes.fsa -r Unknown3_raw_reads_2.txt.gz -k 19
 ```
 The output of the program is printed, and can be used as if it was std.out,
 It is in the format of a tab separated file. Here is an example:
