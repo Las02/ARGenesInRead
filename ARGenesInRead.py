@@ -1,5 +1,6 @@
-#! /usr/bin/env python
 from functions import argument_parser, read_fasta, read_fastq, get_kmers_and_pos, read_is_valid, coverage_stats
+import sys
+import gzip
 
 # Setting up the argument parser
 (kmer_length,gene_filename,read_filename) = argument_parser(sys.argv, 19, "resistance_genes.fsa", "Unknown3_raw_reads_1.txt.gz")
