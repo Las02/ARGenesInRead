@@ -65,6 +65,7 @@ def read_fastq(filename):
     except FileNotFoundError as errormessage:
         sys.exit(f"The file '{filename}' could not be found, error: {errormessage}")
 
+    # Decode the file and extract the dna
     last_line = ""
     try:
         for line in sample_file:
