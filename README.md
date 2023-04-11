@@ -1,6 +1,6 @@
 # Goal
 The goal of this project has been to develop a commandline program to find resistance genes in reads from metagenomic samples.  
-The program runs without any dependencies apart from base Python3 in O(N) time corresponding to the size of the metagenomic sample.  
+The program runs without any dependencies apart from base Python in O(N) time corresponding to the size of the metagenomic sample.  
 
 # How does it work?
 The program makes a database structure which store all k-mers based on a FASTA file of antibiotic resistance genes.
@@ -17,7 +17,7 @@ The program is named "ARGenesInRead.py," It takes 3 arguments:
 ```
 The following is an example of using the program:
 ```
-./ARGenesInRead.py -g resistance_genes.fsa -r Unknown3_raw_reads_2.txt.gz -k 19
+python ./ARGenesInRead.py -g resistance_genes.fsa -r Unknown3_raw_reads_1.txt.gz -k 19
 ```
 The output of the program is printed, and can be used as if it was std.out,
 It is in the format of a tab separated file. Here is an example:
@@ -42,6 +42,7 @@ Link to "resistance_genes.fsa":
 teaching.healthtech.dtu.dk/material/36610/resistance_genes.fsa  
 Link to "Unknown3_raw_reads_1.txt.gz":  
 teaching.healthtech.dtu.dk/material/36610/Unknown3_raw_reads_1.txt.gz   
+Running the program with these files takes about 4 minutes.  
 
 # Program structure
 The program structure, described in pseudocode can be seen below:
