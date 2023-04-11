@@ -4,7 +4,7 @@ The program runs without any dependencies apart from base Python in O(N) time co
 
 # How does it work?
 The program makes a database structure which store all k-mers based on a FASTA file of antibiotic resistance genes.
-It then looks at each k-mer from each read in an input FASTAQ file to see if it matches.
+It then looks at each k-mer from each read in an input FASTAQ file to see if they match.
 In case of a match the read might be from bacterial dna which has a resistance gene.
 The output of the program is then antibiotic genes with coverage above 95% and a depht above 10.  
 
