@@ -1,36 +1,7 @@
 import sys
 import gzip
 
-def argument_parser(argv, kmer_length, gene_file, read_file):
-    """
-    Sets up a argument parser from the argv vector. 
-    In addition takes in default values for variables, if not given 
-    arguments in argv
-    """
-    last_arg = ""
-    # Go throug argv. If the last argument was a "-" argument (eg -k), save the argument in correct variable
-    for arg in argv:
-        # Exit if missing an argument
-        if last_arg.startswith("-") and arg.startswith("-"):
-            sys.exit(f"Missing argument in {last_arg}")
-        elif arg.startswith("-") and argv[-1] == arg:
-            sys.exit(f"Missing argument in {arg}")
 
-        elif last_arg == "-k":
-            try:
-                kmer_length = int(arg)
-            except ValueError as e:
-                sys.exit(f"The kmer needs to be an integer, error:\n{e}")
-
-        elif last_arg == "-g":
-            gene_file = arg
-
-        elif last_arg == "-r":
-            read_file = arg
-
-        last_arg = arg
-
-    return (kmer_length, gene_file, read_file)
 
 def read_fasta(filename):
     '''Reading in several fasta files
@@ -158,3 +129,34 @@ def coverage_stats(depht_count):
     coverage = count / len(depht_count)
     avg_depht = total_depht / len(depht_count)
     return coverage, avg_depht, min_depth
+
+def argument_parser(argv, kmer_length, gene_file, read_file):
+    """
+    Sets up a argument parser from the argv vector. 
+    In addition takes in default values for variables, if not given 
+    arguments in argv
+    """
+    last_arg = ""
+    # Go throug argv. If the last argument was a "-" argument (eg -k), save the argument in correct variable
+    for arg in argv:
+        # Exit if missing an argument
+        if last_arg.startswith("-") and arg.startswith("-"):
+            sys.exit(f"Missing argument in {last_arg}")
+        elif arg.startswith("-") and argv[-1] == arg:
+            sys.exit(f"Missing argument in {arg}")
+
+        elif last_arg == "-k":
+            try:
+                kmer_length = int(arg)
+            except ValueError as e:
+                sys.exit(f"The kmer needs to be an integer, error:\n{e}")
+
+        elif last_arg == "-g":
+            gene_file = arg
+
+        elif last_arg == "-r":
+            read_file = arg
+
+        last_arg = arg
+
+    return (kmer_length, gene_file, read_file)
