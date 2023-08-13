@@ -1,6 +1,6 @@
 # Goal
 The goal of this project has been to develop a commandline program to find resistance genes in reads from metagenomic samples.  
-The program runs without any dependencies apart from base Python in O(N) time corresponding to the size of the metagenomic sample.  
+The program runs without any dependencies apart from base Python in O(N) time corresponding to the number of reads in the sample.  
 
 # How does it work?
 The program makes a database structure which store all k-mers based on a FASTA file of antibiotic resistance genes.
