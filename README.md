@@ -30,7 +30,7 @@ blaOXA-1_1_J02967       Beta-lactam resistance: 1.0     22.82
 strB_1_M96392   Aminoglycoside resistance:Alternate name; aph(6)-Id     1.0     22.32     
 ```
 
-If the program is not giving any arguments or lacking some it will instead use the defaults which are:
+If the program is not given any arguments or lacking some it will instead use the defaults which are:
 
 ```
 -g : "Unknown3_raw_reads_1.txt.gz" 
